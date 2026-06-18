@@ -40,6 +40,9 @@ export async function lagreAnnonse(
   const contactEmail = (formData.get("contactEmail") as string)?.trim() || null;
   const deadlineRaw = formData.get("applicationDeadline") as string;
   const applicationDeadline = deadlineRaw ? new Date(deadlineRaw) : null;
+  const location = (formData.get("location") as string)?.trim() || null;
+  const industry = (formData.get("industry") as string)?.trim() || null;
+  const jobCategory = (formData.get("jobCategory") as string)?.trim() || null;
   const receiptMethod = (formData.get("receiptMethod") as string) || null;
   const receiptEmail = (formData.get("receiptEmail") as string)?.trim() || null;
   const receiptUrl = (formData.get("receiptUrl") as string)?.trim() || null;
@@ -62,6 +65,9 @@ export async function lagreAnnonse(
     data: {
       title,
       body,
+      location,
+      industry,
+      jobCategory,
       contactName,
       contactTitle,
       contactEmail,

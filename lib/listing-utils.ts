@@ -4,6 +4,8 @@ export function utfyllingsgrad(l: JobListingModel): number {
   const fields = [
     !!l.title,
     !!l.body,
+    !!l.location,
+    !!(l.industry && l.jobCategory),
     !!(l.contactName || l.contactTitle || l.contactEmail),
     !!l.applicationDeadline,
     !!(l.receiptMethod && (l.receiptEmail || l.receiptUrl)),

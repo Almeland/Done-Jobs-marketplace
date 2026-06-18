@@ -13,7 +13,7 @@ export default function AdminSlettKnapp({ listingId }: { listingId: string }) {
       <button
         type="button"
         onClick={() => setBekreftet(true)}
-        className="text-sm text-red-500 hover:text-red-700 font-medium"
+        className="text-sm text-red-brand hover:text-red-brand/80 font-medium"
       >
         Slett annonse
       </button>
@@ -23,23 +23,23 @@ export default function AdminSlettKnapp({ listingId }: { listingId: string }) {
   return (
     <form action={action} className="space-y-2">
       {state?.error && (
-        <p className="text-xs text-red-600">{state.error}</p>
+        <p className="text-xs text-red-brand">{state.error}</p>
       )}
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-midnight/50">
         Dette sletter annonsen og alle søknader permanent.
       </p>
       <div className="flex items-center gap-3">
         <button
           type="submit"
           disabled={pending}
-          className="text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 px-3 py-1.5 rounded-md"
+          className="text-sm font-medium text-pearl bg-red-brand hover:bg-red-brand/90 disabled:opacity-50 px-4 py-2 rounded-full transition-colors"
         >
           {pending ? "Sletter…" : "Ja, slett permanent"}
         </button>
         <button
           type="button"
           onClick={() => setBekreftet(false)}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-midnight/50 hover:text-midnight"
         >
           Avbryt
         </button>

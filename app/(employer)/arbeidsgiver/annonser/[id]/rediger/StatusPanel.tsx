@@ -17,10 +17,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  DRAFT: "bg-gray-100 text-gray-600",
-  ACTIVE: "bg-green-100 text-green-700",
-  STOPPED: "bg-yellow-100 text-yellow-700",
-  EXPIRED: "bg-red-100 text-red-600",
+  DRAFT: "bg-platinum text-midnight/60",
+  ACTIVE: "bg-emerald-brand/10 text-emerald-brand",
+  STOPPED: "bg-amber-brand/10 text-amber-brand",
+  EXPIRED: "bg-red-brand/10 text-red-brand",
 };
 
 function daysLeft(expiresAt: Date | string | null): number | null {
@@ -48,12 +48,12 @@ export default function StatusPanel({ listing }: { listing: JobListing }) {
     publiserState?.error ?? stoppState?.error ?? reaktiverState?.error;
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+    <div className="border border-platinum rounded-2xl p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700">Status</span>
+        <span className="text-sm font-medium text-midnight/60">Status</span>
         <span
           className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-            STATUS_COLORS[listing.status] ?? "bg-gray-100 text-gray-600"
+            STATUS_COLORS[listing.status] ?? "bg-platinum text-midnight/60"
           }`}
         >
           {STATUS_LABELS[listing.status] ?? listing.status}
@@ -62,15 +62,15 @@ export default function StatusPanel({ listing }: { listing: JobListing }) {
 
       {listing.status === "ACTIVE" && days !== null && (
         <div className="space-y-1.5">
-          <div className="flex justify-between text-xs text-gray-500">
+          <div className="flex justify-between text-xs text-midnight/50">
             <span>Dager igjen</span>
             <span>
               {Math.max(0, days)}/{LISTING_DURATION_DAYS}
             </span>
           </div>
-          <div className="bg-gray-100 rounded-full h-1.5">
+          <div className="bg-platinum rounded-full h-1.5">
             <div
-              className="bg-green-500 h-1.5 rounded-full"
+              className="bg-emerald-brand h-1.5 rounded-full"
               style={{
                 width: `${Math.max(0, Math.min(100, (days / LISTING_DURATION_DAYS) * 100))}%`,
               }}
@@ -80,7 +80,7 @@ export default function StatusPanel({ listing }: { listing: JobListing }) {
       )}
 
       {listing.publishedAt && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-midnight/40">
           Publisert{" "}
           {new Date(listing.publishedAt).toLocaleDateString("nb-NO", {
             day: "numeric",
@@ -91,7 +91,7 @@ export default function StatusPanel({ listing }: { listing: JobListing }) {
       )}
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+        <p className="text-sm text-red-brand bg-red-brand/5 border border-red-brand/20 rounded-xl px-4 py-3">
           {error}
         </p>
       )}
@@ -101,7 +101,7 @@ export default function StatusPanel({ listing }: { listing: JobListing }) {
           <button
             type="submit"
             disabled={publiserPending}
-            className="w-full bg-green-600 text-white rounded-md py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+            className="w-full bg-violet text-pearl rounded-full py-2.5 text-sm font-medium hover:bg-violet/90 disabled:opacity-50 transition-colors"
           >
             {publiserPending ? "Publiserer…" : "Publiser annonse"}
           </button>
@@ -113,7 +113,7 @@ export default function StatusPanel({ listing }: { listing: JobListing }) {
           <button
             type="submit"
             disabled={stoppPending}
-            className="w-full border border-gray-300 text-gray-700 rounded-md py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+            className="w-full border border-platinum text-midnight/70 rounded-full py-2.5 text-sm font-medium hover:bg-platinum disabled:opacity-50 transition-colors"
           >
             {stoppPending ? "Stopper…" : "Stopp annonsen"}
           </button>
@@ -127,13 +127,13 @@ export default function StatusPanel({ listing }: { listing: JobListing }) {
               <button
                 type="submit"
                 disabled={reaktiverPending}
-                className="w-full bg-blue-600 text-white rounded-md py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                className="w-full bg-midnight text-pearl rounded-full py-2.5 text-sm font-medium hover:bg-midnight/90 disabled:opacity-50 transition-colors"
               >
                 {reaktiverPending ? "Reaktiverer…" : "Reaktiver annonse"}
               </button>
             </form>
           ) : (
-            <p className="text-xs text-red-500 text-center">
+            <p className="text-xs text-red-brand text-center">
               Utløpt — kan ikke reaktiveres
             </p>
           )}
@@ -141,7 +141,7 @@ export default function StatusPanel({ listing }: { listing: JobListing }) {
       )}
 
       {listing.status === "EXPIRED" && (
-        <p className="text-xs text-gray-400 text-center">
+        <p className="text-xs text-midnight/40 text-center">
           Annonsen er utløpt og kan ikke reaktiveres.
         </p>
       )}

@@ -7,7 +7,7 @@ export default function LoggUtKnapp() {
     <form action={loggUt}>
       <button
         type="submit"
-        className="text-gray-600 hover:text-gray-900 text-sm"
+        className="text-sm text-midnight/50 hover:text-midnight transition-colors"
       >
         Logg ut
       </button>

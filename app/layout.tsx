@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import "./globals.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
 
 export const metadata: Metadata = {
   title: "Done Jobs",
-  description: "Nordisk jobbportal",
+  description: "Ledige stillinger",
 };
 
 export default function RootLayout({
@@ -15,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="nb" className={`${geist.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-white text-gray-900">
+    <html lang="nb" className={`${dmSans.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-pearl text-midnight">
         {children}
       </body>
     </html>

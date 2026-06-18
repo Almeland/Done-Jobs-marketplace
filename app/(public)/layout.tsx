@@ -7,14 +7,14 @@ export default function PublicLayout({
 }) {
   return (
     <>
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-5xl px-4 h-14 flex items-center justify-between">
-          <Link href="/stillinger" className="font-semibold text-lg text-gray-900">
+      <header className="border-b border-platinum bg-pearl">
+        <div className="mx-auto max-w-5xl px-6 h-16 flex items-center justify-between">
+          <Link href="/stillinger" className="font-semibold text-lg text-midnight tracking-tight">
             Done Jobs
           </Link>
           <Link
             href="/logg-inn"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900"
+            className="text-sm font-medium text-midnight/60 hover:text-midnight transition-colors"
           >
             For arbeidsgivere
           </Link>

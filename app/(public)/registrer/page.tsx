@@ -7,13 +7,9 @@ export default async function RegistrerPage() {
   if (user) redirect("/arbeidsgiver");
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-        Registrer bedrift
-      </h1>
-      <p className="text-sm text-gray-500 mb-8">
-        Opprett en konto for å publisere stillingsannonser.
-      </p>
+    <div className="mx-auto max-w-sm px-6 py-16">
+      <h1 className="text-[32px] font-semibold text-midnight mb-2 tracking-tight">Registrer bedrift</h1>
+      <p className="text-[16px] text-midnight/50 mb-8">Opprett en konto for å publisere stillingsannonser.</p>
       <RegistrerSkjema />
     </div>
   );

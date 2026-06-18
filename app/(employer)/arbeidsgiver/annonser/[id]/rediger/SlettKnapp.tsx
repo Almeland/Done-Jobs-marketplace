@@ -13,7 +13,7 @@ export default function SlettKnapp({ listingId }: { listingId: string }) {
       <button
         type="button"
         onClick={() => setBekreftet(true)}
-        className="text-sm text-red-500 hover:text-red-700"
+        className="text-sm text-red-brand hover:text-red-brand/80"
       >
         Slett utkast
       </button>
@@ -22,18 +22,18 @@ export default function SlettKnapp({ listingId }: { listingId: string }) {
 
   return (
     <form action={action} className="flex items-center gap-2">
-      <span className="text-xs text-gray-500">Er du sikker?</span>
+      <span className="text-xs text-midnight/50">Er du sikker?</span>
       <button
         type="submit"
         disabled={pending}
-        className="text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+        className="text-sm font-medium text-red-brand hover:text-red-brand/80 disabled:opacity-50"
       >
         Ja, slett
       </button>
       <button
         type="button"
         onClick={() => setBekreftet(false)}
-        className="text-sm text-gray-500 hover:text-gray-700"
+        className="text-sm text-midnight/50 hover:text-midnight"
       >
         Avbryt
       </button>

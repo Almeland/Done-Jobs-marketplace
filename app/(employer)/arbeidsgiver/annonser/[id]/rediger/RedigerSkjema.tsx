@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { lagreAnnonse } from "@/app/actions/listings";
 import type { JobListingModel as JobListing } from "@/app/generated/prisma/models/JobListing";
 import Link from "next/link";
+import { INDUSTRIES, JOB_CATEGORIES } from "@/lib/categories";
 
 type Props = { listing: JobListing };
 
@@ -41,71 +42,117 @@ export default function RedigerSkjema({ listing }: Props) {
       onChange={scheduleAutosave}
     >
       {state?.error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+        <p className="text-sm text-red-brand bg-red-brand/5 border border-red-brand/20 rounded-xl px-4 py-3">
           {state.error}
         </p>
       )}
 
       {/* Tittel */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-midnight/60 mb-1.5">
           Stillingstittel
         </label>
         <input
           name="title"
           type="text"
           defaultValue={listing.title ?? ""}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
           placeholder="f.eks. Frontendutvikler"
         />
       </div>
 
+      {/* Sted, bransje og kategori */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div>
+          <label className="block text-sm font-medium text-midnight/60 mb-1.5">
+            Sted
+          </label>
+          <input
+            name="location"
+            type="text"
+            defaultValue={listing.location ?? ""}
+            className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
+            placeholder="f.eks. Oslo"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-midnight/60 mb-1.5">
+            Bransje
+          </label>
+          <select
+            name="industry"
+            defaultValue={listing.industry ?? ""}
+            className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight focus:outline-none focus:ring-2 focus:ring-violet/40"
+          >
+            <option value="">Velg bransje</option>
+            {INDUSTRIES.map((i) => (
+              <option key={i} value={i}>{i}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-midnight/60 mb-1.5">
+            Stillingskategori
+          </label>
+          <select
+            name="jobCategory"
+            defaultValue={listing.jobCategory ?? ""}
+            className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight focus:outline-none focus:ring-2 focus:ring-violet/40"
+          >
+            <option value="">Velg kategori</option>
+            {JOB_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {/* Annonsetekst */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-midnight/60 mb-1.5">
           Annonsetekst
         </label>
         <textarea
           name="body"
           rows={12}
           defaultValue={listing.body ?? ""}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+          className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40 font-mono"
           placeholder="Beskriv stillingen, arbeidsoppgaver, kvalifikasjoner…"
         />
-        <p className="text-xs text-gray-400 mt-1">Støtter HTML-formatering.</p>
+        <p className="text-xs text-midnight/30 mt-1">Støtter HTML-formatering.</p>
       </div>
 
       {/* Kontaktperson */}
-      <fieldset className="border border-gray-200 rounded-lg p-4">
-        <legend className="text-sm font-medium text-gray-700 px-1">
+      <fieldset className="border border-platinum rounded-2xl p-5">
+        <legend className="text-sm font-medium text-midnight/60 px-1">
           Kontaktperson
         </legend>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Navn</label>
+            <label className="block text-xs text-midnight/50 mb-1">Navn</label>
             <input
               name="contactName"
               type="text"
               defaultValue={listing.contactName ?? ""}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Tittel</label>
+            <label className="block text-xs text-midnight/50 mb-1">Tittel</label>
             <input
               name="contactTitle"
               type="text"
               defaultValue={listing.contactTitle ?? ""}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">E-post</label>
+            <label className="block text-xs text-midnight/50 mb-1">E-post</label>
             <input
               name="contactEmail"
               type="email"
               defaultValue={listing.contactEmail ?? ""}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
             />
           </div>
         </div>
@@ -113,14 +160,14 @@ export default function RedigerSkjema({ listing }: Props) {
 
       {/* Søknadsfrist */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-midnight/60 mb-1.5">
           Søknadsfrist
         </label>
         <input
           name="applicationDeadline"
           type="date"
           defaultValue={deadline}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight focus:outline-none focus:ring-2 focus:ring-violet/40"
         />
       </div>
 
@@ -128,26 +175,26 @@ export default function RedigerSkjema({ listing }: Props) {
       <SoknadsMottak listing={listing} />
 
       {/* Handlinger */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+      <div className="flex items-center justify-between pt-4 border-t border-platinum">
         <Link
           href="/arbeidsgiver"
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-midnight/50 hover:text-midnight"
         >
           ← Tilbake
         </Link>
         <div className="flex items-center gap-3">
           {savedAt && !pending && !state?.error && (
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-midnight/30">
               Lagret {savedAt.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
           {pending && (
-            <span className="text-xs text-gray-400">Lagrer…</span>
+            <span className="text-xs text-midnight/30">Lagrer…</span>
           )}
           <button
             type="submit"
             disabled={pending}
-            className="bg-blue-600 text-white rounded-md px-5 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="bg-midnight text-pearl rounded-full px-5 py-2.5 text-sm font-medium hover:bg-midnight/90 disabled:opacity-50 transition-colors"
           >
             {pending ? "Lagrer…" : "Lagre"}
           </button>
@@ -159,8 +206,8 @@ export default function RedigerSkjema({ listing }: Props) {
 
 function SoknadsMottak({ listing }: Props) {
   return (
-    <fieldset className="border border-gray-200 rounded-lg p-4">
-      <legend className="text-sm font-medium text-gray-700 px-1">
+    <fieldset className="border border-platinum rounded-2xl p-5">
+      <legend className="text-sm font-medium text-midnight/60 px-1">
         Søknadsmottak
       </legend>
       <div className="mt-3 space-y-4">
@@ -170,17 +217,17 @@ function SoknadsMottak({ listing }: Props) {
             name="receiptMethod"
             value="EMAIL"
             defaultChecked={listing.receiptMethod === "EMAIL" || !listing.receiptMethod}
-            className="mt-0.5"
+            className="mt-0.5 accent-violet"
           />
           <div className="flex-1">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-midnight">
               Motta søknader på e-post
             </span>
             <input
               name="receiptEmail"
               type="email"
               defaultValue={listing.receiptEmail ?? ""}
-              className="mt-2 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
               placeholder="soknad@bedrift.no"
             />
           </div>
@@ -192,17 +239,17 @@ function SoknadsMottak({ listing }: Props) {
             name="receiptMethod"
             value="EXTERNAL_URL"
             defaultChecked={listing.receiptMethod === "EXTERNAL_URL"}
-            className="mt-0.5"
+            className="mt-0.5 accent-violet"
           />
           <div className="flex-1">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-midnight">
               Ekstern søknadslenke
             </span>
             <input
               name="receiptUrl"
               type="url"
               defaultValue={listing.receiptUrl ?? ""}
-              className="mt-2 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
               placeholder="https://soknad.bedrift.no/stilling"
             />
           </div>

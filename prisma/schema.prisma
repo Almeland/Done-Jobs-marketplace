@@ -47,6 +47,10 @@ model JobListing {
 
   applicationDeadline DateTime?
 
+  location    String?
+  industry    String?
+  jobCategory String?
+
   receiptMethod String?
   receiptEmail  String?
   receiptUrl    String?

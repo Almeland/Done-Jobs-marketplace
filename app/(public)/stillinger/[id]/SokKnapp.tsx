@@ -15,26 +15,18 @@ export default function SokKnapp({ listing }: Props) {
     });
   }
 
+  const cls = "inline-block bg-midnight text-pearl rounded-full px-6 py-3 text-sm font-medium hover:bg-midnight/90 transition-colors";
+
   if (listing.receiptMethod === "EXTERNAL_URL" && listing.receiptUrl) {
     return (
-      <a
-        href={listing.receiptUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={handleKlikk}
-        className="inline-block bg-blue-600 text-white rounded-lg px-6 py-3 font-medium hover:bg-blue-700"
-      >
+      <a href={listing.receiptUrl} target="_blank" rel="noopener noreferrer" onClick={handleKlikk} className={cls}>
         Søk på stilling →
       </a>
     );
   }
 
   return (
-    <a
-      href={`/stillinger/${listing.id}/soknad`}
-      onClick={handleKlikk}
-      className="inline-block bg-blue-600 text-white rounded-lg px-6 py-3 font-medium hover:bg-blue-700"
-    >
+    <a href={`/stillinger/${listing.id}/soknad`} onClick={handleKlikk} className={cls}>
       Søk på stilling →
     </a>
   );

@@ -11,23 +11,23 @@ export default async function EmployerLayout({
 
   return (
     <>
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-5xl px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/arbeidsgiver" className="font-semibold text-lg text-gray-900">
+      <header className="border-b border-platinum bg-pearl">
+        <div className="mx-auto max-w-5xl px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link href="/arbeidsgiver" className="font-semibold text-lg text-midnight tracking-tight">
               Done Jobs
             </Link>
-            <nav className="flex items-center gap-4 text-sm">
+            <nav className="flex items-center gap-5 text-sm">
               <Link
                 href="/arbeidsgiver"
-                className="text-gray-600 hover:text-gray-900"
+                className="text-midnight/60 hover:text-midnight transition-colors"
               >
-                Oversikt
+                Annonser
               </Link>
             </nav>
           </div>
-          <div className="flex items-center gap-4 text-sm">
-            <span className="text-gray-500">{user.account.companyName}</span>
+          <div className="flex items-center gap-5 text-sm">
+            <span className="text-midnight/40 font-medium">{user.account.companyName}</span>
             <LoggUtKnapp />
           </div>
         </div>
