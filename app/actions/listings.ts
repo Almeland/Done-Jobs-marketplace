@@ -145,6 +145,19 @@ export async function reaktiverAnnonse(listingId: string): Promise<ActionState> 
   return null;
 }
 
+export async function adminSlettAnnonse(listingId: string): Promise<ActionState> {
+  const user = await requireAuth();
+  if (user.role !== "ADMIN") return { error: "Kun admin kan slette annonser." };
+
+  const listing = await prisma.jobListing.findUnique({ where: { id: listingId } });
+  if (!listing || listing.accountId !== user.accountId)
+    return { error: "Annonsen finnes ikke." };
+
+  await prisma.jobListing.delete({ where: { id: listingId } });
+  revalidatePath("/arbeidsgiver");
+  redirect("/arbeidsgiver");
+}
+
 export async function slettUtkast(listingId: string): Promise<ActionState> {
   const user = await requireAuth();
 

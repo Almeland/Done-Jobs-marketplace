@@ -5,6 +5,7 @@ import { expireStaleListings } from "@/lib/expire-listings";
 import RedigerSkjema from "./RedigerSkjema";
 import SlettKnapp from "./SlettKnapp";
 import StatusPanel from "./StatusPanel";
+import AdminSlettKnapp from "./AdminSlettKnapp";
 
 export default async function RedigerAnnonsePage({
   params,
@@ -27,11 +28,14 @@ export default async function RedigerAnnonsePage({
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 items-start">
         <div>
           <RedigerSkjema listing={listing} />
-          {listing.status === "DRAFT" && (
-            <div className="mt-4">
+          <div className="mt-4 flex items-center gap-4">
+            {listing.status === "DRAFT" && (
               <SlettKnapp listingId={listing.id} />
-            </div>
-          )}
+            )}
+            {user.role === "ADMIN" && listing.status !== "DRAFT" && (
+              <AdminSlettKnapp listingId={listing.id} />
+            )}
+          </div>
         </div>
         <StatusPanel listing={listing} />
       </div>
