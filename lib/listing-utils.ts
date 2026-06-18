@@ -9,8 +9,27 @@ export function utfyllingsgrad(l: JobListingModel): number {
     !!(l.contactName || l.contactTitle || l.contactEmail),
     !!l.applicationDeadline,
     !!(l.receiptMethod && (l.receiptEmail || l.receiptUrl)),
+    !!(l.salaryMin || l.salaryMax),
   ];
   return Math.round((fields.filter(Boolean).length / fields.length) * 100);
+}
+
+export function formaterLonn(
+  salaryMin: number | null,
+  salaryMax: number | null,
+  salaryType: string | null
+): string | null {
+  if (!salaryMin && !salaryMax) return null;
+
+  const suffix = salaryType === "MONTHLY" ? "kr/mnd" : salaryType === "HOURLY" ? "kr/t" : "kr/år";
+
+  function fmt(n: number) {
+    return n.toLocaleString("nb-NO");
+  }
+
+  if (salaryMin && salaryMax) return `${fmt(salaryMin)} – ${fmt(salaryMax)} ${suffix}`;
+  if (salaryMin) return `Fra ${fmt(salaryMin)} ${suffix}`;
+  return `Inntil ${fmt(salaryMax!)} ${suffix}`;
 }
 
 export function relativTid(date: Date | string): string {

@@ -3,21 +3,29 @@
 import { useRouter } from "next/navigation";
 import { INDUSTRIES, JOB_CATEGORIES } from "@/lib/categories";
 
+const SALARY_OPTIONS = [
+  { label: "Under 500 000 kr/år", value: "u500" },
+  { label: "500 000 – 700 000 kr/år", value: "500-700" },
+  { label: "700 000 – 900 000 kr/år", value: "700-900" },
+  { label: "Over 900 000 kr/år", value: "o900" },
+];
+
 type Props = {
   bransje: string;
   kategori: string;
   sted: string;
+  lonn: string;
   locations: string[];
 };
 
 const select =
   "border border-platinum bg-white rounded-full px-4 py-2 text-sm text-midnight focus:outline-none focus:ring-2 focus:ring-violet/40 cursor-pointer";
 
-export default function FilterPanel({ bransje, kategori, sted, locations }: Props) {
+export default function FilterPanel({ bransje, kategori, sted, lonn, locations }: Props) {
   const router = useRouter();
 
-  function update(key: "bransje" | "kategori" | "sted", value: string) {
-    const current = { bransje, kategori, sted, [key]: value };
+  function update(key: "bransje" | "kategori" | "sted" | "lonn", value: string) {
+    const current = { bransje, kategori, sted, lonn, [key]: value };
     const p = new URLSearchParams();
     Object.entries(current).forEach(([k, v]) => {
       if (v) p.set(k, v);
@@ -25,7 +33,7 @@ export default function FilterPanel({ bransje, kategori, sted, locations }: Prop
     router.push(`/stillinger${p.size ? `?${p}` : ""}`);
   }
 
-  const hasFilters = !!(bransje || kategori || sted);
+  const hasFilters = !!(bransje || kategori || sted || lonn);
 
   return (
     <div className="flex flex-wrap items-center gap-3 mb-8">
@@ -69,6 +77,19 @@ export default function FilterPanel({ bransje, kategori, sted, locations }: Prop
           ))}
         </select>
       )}
+
+      <select
+        value={lonn}
+        onChange={(e) => update("lonn", e.target.value)}
+        className={select}
+      >
+        <option value="">Alle lønnsnivåer</option>
+        {SALARY_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
 
       {hasFilters && (
         <button

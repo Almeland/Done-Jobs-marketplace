@@ -5,6 +5,7 @@ import { lagreAnnonse } from "@/app/actions/listings";
 import type { JobListingModel as JobListing } from "@/app/generated/prisma/models/JobListing";
 import Link from "next/link";
 import { INDUSTRIES, JOB_CATEGORIES } from "@/lib/categories";
+import { formaterLonn } from "@/lib/listing-utils";
 import AiAssistent from "./AiAssistent";
 
 type Props = { listing: JobListing; companyName: string };
@@ -19,6 +20,9 @@ export default function RedigerSkjema({ listing, companyName }: Props) {
   const [industry, setIndustry] = useState(listing.industry ?? "");
   const [jobCategory, setJobCategory] = useState(listing.jobCategory ?? "");
   const [body, setBody] = useState(listing.body ?? "");
+  const [salaryType, setSalaryType] = useState(listing.salaryType ?? "ANNUAL");
+  const [salaryMin, setSalaryMin] = useState(listing.salaryMin ? String(listing.salaryMin) : "");
+  const [salaryMax, setSalaryMax] = useState(listing.salaryMax ? String(listing.salaryMax) : "");
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -117,6 +121,70 @@ export default function RedigerSkjema({ listing, companyName }: Props) {
           </select>
         </div>
       </div>
+
+      {/* Lønnsindikator */}
+      <fieldset className="border border-platinum rounded-2xl p-5">
+        <legend className="text-sm font-medium text-midnight/60 px-1">
+          Lønnsindikator
+          <span className="text-midnight/30 font-normal"> (valgfritt)</span>
+        </legend>
+        <div className="mt-3 space-y-4">
+          <div>
+            <label className="block text-xs text-midnight/50 mb-1">Lønnstype</label>
+            <select
+              name="salaryType"
+              value={salaryType}
+              onChange={(e) => setSalaryType(e.target.value)}
+              className="border border-platinum bg-white rounded-xl px-4 py-2.5 text-sm text-midnight focus:outline-none focus:ring-2 focus:ring-violet/40"
+            >
+              <option value="ANNUAL">Årslønn</option>
+              <option value="MONTHLY">Månedslønn</option>
+              <option value="HOURLY">Timelønn</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-midnight/50 mb-1">
+                Fra (kr)
+              </label>
+              <input
+                name="salaryMin"
+                type="number"
+                min={0}
+                step={salaryType === "HOURLY" ? 10 : salaryType === "MONTHLY" ? 1000 : 10000}
+                value={salaryMin}
+                onChange={(e) => setSalaryMin(e.target.value)}
+                className="w-full border border-platinum bg-white rounded-xl px-4 py-2.5 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
+                placeholder={salaryType === "HOURLY" ? "f.eks. 350" : salaryType === "MONTHLY" ? "f.eks. 55000" : "f.eks. 650000"}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-midnight/50 mb-1">
+                Til (kr)
+              </label>
+              <input
+                name="salaryMax"
+                type="number"
+                min={0}
+                step={salaryType === "HOURLY" ? 10 : salaryType === "MONTHLY" ? 1000 : 10000}
+                value={salaryMax}
+                onChange={(e) => setSalaryMax(e.target.value)}
+                className="w-full border border-platinum bg-white rounded-xl px-4 py-2.5 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
+                placeholder={salaryType === "HOURLY" ? "f.eks. 500" : salaryType === "MONTHLY" ? "f.eks. 75000" : "f.eks. 850000"}
+              />
+            </div>
+          </div>
+          {(salaryMin || salaryMax) && (
+            <p className="text-xs text-violet font-medium">
+              Vises som: {formaterLonn(
+                salaryMin ? parseInt(salaryMin) : null,
+                salaryMax ? parseInt(salaryMax) : null,
+                salaryType
+              )}
+            </p>
+          )}
+        </div>
+      </fieldset>
 
       {/* AI-assistent */}
       <AiAssistent

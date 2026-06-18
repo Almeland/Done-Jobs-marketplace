@@ -2,6 +2,16 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import FilterPanel from "./FilterPanel";
 import JobAlertForm from "./JobAlertForm";
+import { formaterLonn } from "@/lib/listing-utils";
+
+const SALARY_BRACKETS = [
+  { label: "Under 500 000 kr/år", value: "u500", min: null, max: 499999 },
+  { label: "500 000 – 700 000 kr/år", value: "500-700", min: 500000, max: 700000 },
+  { label: "700 000 – 900 000 kr/år", value: "700-900", min: 700000, max: 900000 },
+  { label: "Over 900 000 kr/år", value: "o900", min: 900000, max: null },
+];
+
+export { SALARY_BRACKETS };
 
 export default async function StillingerPage({
   searchParams,
@@ -12,6 +22,9 @@ export default async function StillingerPage({
   const bransje = sp.bransje ?? "";
   const kategori = sp.kategori ?? "";
   const sted = sp.sted ?? "";
+  const lonn = sp.lonn ?? "";
+
+  const bracket = SALARY_BRACKETS.find((b) => b.value === lonn);
 
   const [listings, locationRows] = await Promise.all([
     prisma.jobListing.findMany({
@@ -20,6 +33,13 @@ export default async function StillingerPage({
         ...(bransje ? { industry: bransje } : {}),
         ...(kategori ? { jobCategory: kategori } : {}),
         ...(sted ? { location: sted } : {}),
+        ...(bracket
+          ? {
+              salaryType: "ANNUAL",
+              ...(bracket.min !== null ? { salaryMax: { gte: bracket.min } } : {}),
+              ...(bracket.max !== null ? { salaryMin: { lte: bracket.max } } : {}),
+            }
+          : {}),
       },
       include: { account: true },
       orderBy: { publishedAt: "desc" },
@@ -33,7 +53,7 @@ export default async function StillingerPage({
   ]);
 
   const locations = locationRows.map((r) => r.location as string).sort();
-  const hasFilters = !!(bransje || kategori || sted);
+  const hasFilters = !!(bransje || kategori || sted || lonn);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-14">
@@ -48,7 +68,7 @@ export default async function StillingerPage({
           : `${listings.length} stilling${listings.length !== 1 ? "er" : ""} utlyst`}
       </p>
 
-      <FilterPanel bransje={bransje} kategori={kategori} sted={sted} locations={locations} />
+      <FilterPanel bransje={bransje} kategori={kategori} sted={sted} lonn={lonn} locations={locations} />
 
       <div className="mb-8">
         <JobAlertForm bransje={bransje} kategori={kategori} sted={sted} />
@@ -95,6 +115,14 @@ export default async function StillingerPage({
                         </span>
                       )}
                     </div>
+                    {formaterLonn(l.salaryMin, l.salaryMax, l.salaryType) && (
+                      <span className="text-xs text-emerald-brand font-medium flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {formaterLonn(l.salaryMin, l.salaryMax, l.salaryType)}
+                      </span>
+                    )}
                     {deadline && (
                       <p className={`text-xs mt-2 ${deadlineSoon ? "text-amber-brand font-medium" : "text-midnight/40"}`}>
                         Frist:{" "}

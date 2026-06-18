@@ -66,6 +66,10 @@ model JobListing {
   industry    String?
   jobCategory String?
 
+  salaryMin  Int?
+  salaryMax  Int?
+  salaryType String?
+
   receiptMethod String?
   receiptEmail  String?
   receiptUrl    String?

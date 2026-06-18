@@ -44,6 +44,11 @@ export async function lagreAnnonse(
   const location = (formData.get("location") as string)?.trim() || null;
   const industry = (formData.get("industry") as string)?.trim() || null;
   const jobCategory = (formData.get("jobCategory") as string)?.trim() || null;
+  const salaryType = (formData.get("salaryType") as string) || null;
+  const salaryMinRaw = formData.get("salaryMin") as string;
+  const salaryMaxRaw = formData.get("salaryMax") as string;
+  const salaryMin = salaryMinRaw ? parseInt(salaryMinRaw.replace(/\s/g, ""), 10) || null : null;
+  const salaryMax = salaryMaxRaw ? parseInt(salaryMaxRaw.replace(/\s/g, ""), 10) || null : null;
   const receiptMethod = (formData.get("receiptMethod") as string) || null;
   const receiptEmail = (formData.get("receiptEmail") as string)?.trim() || null;
   const receiptUrl = (formData.get("receiptUrl") as string)?.trim() || null;
@@ -69,6 +74,9 @@ export async function lagreAnnonse(
       location,
       industry,
       jobCategory,
+      salaryMin,
+      salaryMax,
+      salaryType,
       contactName,
       contactTitle,
       contactEmail,
