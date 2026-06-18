@@ -29,6 +29,7 @@ export default async function ArbeidgiverPage() {
     prisma.jobListing.findMany({
       where: { accountId: user.accountId },
       orderBy: { updatedAt: "desc" },
+      include: { _count: { select: { applications: true } } },
     }),
     prisma.companyFollow.count({ where: { accountId: user.accountId } }),
   ]);
@@ -126,6 +127,7 @@ export default async function ArbeidgiverPage() {
                   <th className="px-4 py-3 text-left">Dager igjen</th>
                   <th className="px-4 py-3 text-right">Visninger</th>
                   <th className="px-4 py-3 text-right">Søknadsknapp</th>
+                  <th className="px-4 py-3 text-right">Søknader</th>
                   <th className="px-4 py-3 text-left"></th>
                 </tr>
               </thead>
@@ -237,6 +239,20 @@ export default async function ArbeidgiverPage() {
                           <span className="font-medium text-midnight">{l.applyClickCount}</span>
                         ) : (
                           <span className="text-midnight/20">—</span>
+                        )}
+                      </td>
+
+                      {/* Søknader */}
+                      <td className="px-4 py-3 text-right">
+                        {l._count.applications > 0 ? (
+                          <Link
+                            href={`/arbeidsgiver/annonser/${l.id}/soknader`}
+                            className="font-semibold text-violet hover:text-violet/80"
+                          >
+                            {l._count.applications}
+                          </Link>
+                        ) : (
+                          <span className="text-midnight/20">0</span>
                         )}
                       </td>
 

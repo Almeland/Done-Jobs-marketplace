@@ -129,5 +129,9 @@ model Application {
   coverText      String?
   cvFileUrl      String?
 
+  status      String   @default("INNSENDT")
+  statusNote  String?
+  updatedAt   DateTime @updatedAt
+
   submittedAt DateTime @default(now())
 }

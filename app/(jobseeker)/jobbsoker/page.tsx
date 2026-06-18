@@ -4,6 +4,7 @@ import Link from "next/link";
 import UnfollowKnapp from "./UnfollowKnapp";
 import SlettVarselKnapp from "./SlettVarselKnapp";
 import RedigerVarselKnapp from "./RedigerVarselKnapp";
+import { APPLICATION_STATUSES } from "@/app/actions/applications";
 
 export default async function JobbsokerDashboard() {
   const jobSeeker = await requireJobSeeker();
@@ -45,17 +46,25 @@ export default async function JobbsokerDashboard() {
           />
         ) : (
           <ul className="divide-y divide-platinum border border-platinum rounded-2xl bg-white">
-            {applications.map((a) => (
-              <li key={a.id} className="px-5 py-4 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-midnight">{a.jobListing.title}</p>
-                  <p className="text-xs text-midnight/50 mt-0.5">{a.jobListing.account.companyName}</p>
-                </div>
-                <p className="text-xs text-midnight/30 whitespace-nowrap">
-                  {new Date(a.submittedAt).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" })}
-                </p>
-              </li>
-            ))}
+            {applications.map((a) => {
+              const statusInfo = APPLICATION_STATUSES.find((s) => s.value === a.status);
+              return (
+                <li key={a.id} className="px-5 py-4 flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-midnight truncate">{a.jobListing.title}</p>
+                    <p className="text-xs text-midnight/50 mt-0.5">{a.jobListing.account.companyName}</p>
+                    {statusInfo && (
+                      <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full ${statusInfo.color}`}>
+                        {statusInfo.label}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-midnight/30 whitespace-nowrap shrink-0 mt-0.5">
+                    {new Date(a.submittedAt).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
