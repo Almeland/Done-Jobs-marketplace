@@ -11,10 +11,24 @@ model Account {
   id          String       @id @default(cuid())
   companyName String
   logoUrl     String?
+  description String?
+  website     String?
   createdAt   DateTime     @default(now())
   users       User[]
   listings    JobListing[]
   followers   CompanyFollow[]
+}
+
+model JobSeeker {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  follows      CompanyFollow[]
+  alerts       JobAlert[]
+  applications Application[]
 }
 
 model User {
@@ -71,24 +85,29 @@ model JobListing {
 }
 
 model JobAlert {
-  id         String    @id @default(cuid())
-  email      String
-  bransje    String?
-  kategori   String?
-  sted       String?
-  token      String    @unique @default(cuid())
-  createdAt  DateTime  @default(now())
-  lastSentAt DateTime?
+  id          String     @id @default(cuid())
+  email       String
+  jobSeekerId String?
+  jobSeeker   JobSeeker? @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  name        String?
+  bransje     String?
+  kategori    String?
+  sted        String?
+  token       String     @unique @default(cuid())
+  createdAt   DateTime   @default(now())
+  lastSentAt  DateTime?
 }
 
 model CompanyFollow {
-  id             String   @id @default(cuid())
+  id             String     @id @default(cuid())
   email          String
   followerName   String?
+  jobSeekerId    String?
+  jobSeeker      JobSeeker? @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
   accountId      String
-  account        Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  token          String   @unique @default(cuid())
-  createdAt      DateTime @default(now())
+  account        Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  token          String     @unique @default(cuid())
+  createdAt      DateTime   @default(now())
 
   @@unique([email, accountId])
 }
@@ -97,6 +116,8 @@ model Application {
   id           String     @id @default(cuid())
   jobListingId String
   jobListing   JobListing @relation(fields: [jobListingId], references: [id], onDelete: Cascade)
+  jobSeekerId  String?
+  jobSeeker    JobSeeker? @relation(fields: [jobSeekerId], references: [id], onDelete: SetNull)
 
   applicantName  String
   applicantEmail String

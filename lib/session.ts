@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
 const SESSION_COOKIE = "session_user_id";
+const JOBSEEKER_COOKIE = "session_jobseeker_id";
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 export async function createSession(userId: string) {
@@ -24,11 +25,31 @@ export async function getSession() {
   const cookieStore = await cookies();
   const userId = cookieStore.get(SESSION_COOKIE)?.value;
   if (!userId) return null;
-
-  const user = await prisma.user.findUnique({
+  return prisma.user.findUnique({
     where: { id: userId },
     include: { account: true },
   });
+}
 
-  return user;
+export async function createJobSeekerSession(id: string) {
+  const cookieStore = await cookies();
+  cookieStore.set(JOBSEEKER_COOKIE, id, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: MAX_AGE,
+    path: "/",
+  });
+}
+
+export async function clearJobSeekerSession() {
+  const cookieStore = await cookies();
+  cookieStore.delete(JOBSEEKER_COOKIE);
+}
+
+export async function getJobSeekerSession() {
+  const cookieStore = await cookies();
+  const id = cookieStore.get(JOBSEEKER_COOKIE)?.value;
+  if (!id) return null;
+  return prisma.jobSeeker.findUnique({ where: { id } });
 }

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getJobSeekerSession } from "@/lib/session";
 import { writeFile } from "fs/promises";
 import path from "path";
 
@@ -44,6 +45,8 @@ export async function sendSoknad(
     cvFileUrl = `/uploads/${filename}`;
   }
 
+  const jobSeeker = await getJobSeekerSession();
+
   await prisma.application.create({
     data: {
       jobListingId: listingId,
@@ -52,6 +55,7 @@ export async function sendSoknad(
       applicantPhone,
       coverText,
       cvFileUrl,
+      jobSeekerId: jobSeeker?.id ?? null,
     },
   });
 
