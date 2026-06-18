@@ -11,8 +11,13 @@ model Account {
   id          String       @id @default(cuid())
   companyName String
   logoUrl     String?
-  description String?
-  website     String?
+  description   String?
+  website       String?
+  tagline       String?
+  employeeCount String?
+  foundedYear   Int?
+  cultureValues String?
+  benefits      String?
   createdAt   DateTime     @default(now())
   users       User[]
   listings    JobListing[]
