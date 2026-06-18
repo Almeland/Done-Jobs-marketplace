@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import SokKnapp from "./SokKnapp";
+import ViewTracker from "./ViewTracker";
 
 export default async function StillingDetaljPage({
   params,
@@ -23,6 +24,7 @@ export default async function StillingDetaljPage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
+      <ViewTracker listingId={listing.id} />
       {/* Header */}
       <div className="flex items-start justify-between gap-6 mb-8">
         <div className="flex-1">
