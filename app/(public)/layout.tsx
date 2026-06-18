@@ -7,7 +7,7 @@ export default async function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const jobSeeker = await getJobSeekerSession();
+  const seeker = await getJobSeekerSession();
 
   return (
     <>
@@ -21,11 +21,11 @@ export default async function PublicLayout({
               Bedrifter
             </Link>
           </div>
-          <nav className="flex items-center gap-4">
-            {jobSeeker ? (
+          <div className="flex items-center gap-4">
+            {seeker ? (
               <>
                 <Link href="/jobbsoker" className="text-sm font-medium text-midnight/70 hover:text-midnight transition-colors">
-                  {jobSeeker.name.split(" ")[0]}
+                  {seeker.name.split(" ")[0]}
                 </Link>
                 <form action={loggUtJobbsoker}>
                   <button type="submit" className="text-sm text-midnight/40 hover:text-midnight transition-colors">
@@ -41,7 +41,7 @@ export default async function PublicLayout({
             <Link href="/logg-inn" className="text-sm font-medium text-midnight/60 hover:text-midnight transition-colors">
               For arbeidsgivere
             </Link>
-          </nav>
+          </div>
         </div>
       </header>
       <main className="flex-1">{children}</main>

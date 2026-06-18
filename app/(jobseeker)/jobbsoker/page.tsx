@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import UnfollowKnapp from "./UnfollowKnapp";
 import SlettVarselKnapp from "./SlettVarselKnapp";
+import RedigerVarselKnapp from "./RedigerVarselKnapp";
 
 export default async function JobbsokerDashboard() {
   const jobSeeker = await requireJobSeeker();
@@ -133,7 +134,10 @@ export default async function JobbsokerDashboard() {
                     </p>
                   )}
                 </div>
-                <SlettVarselKnapp alertId={a.id} />
+                <div className="flex items-center gap-3 shrink-0">
+                  <RedigerVarselKnapp alert={a} />
+                  <SlettVarselKnapp alertId={a.id} />
+                </div>
               </li>
             ))}
           </ul>

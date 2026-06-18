@@ -1,9 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { createJobSeekerSession, clearJobSeekerSession } from "@/lib/session";
+import { createJobSeekerSession, clearJobSeekerSession, getJobSeekerSession } from "@/lib/session";
 import bcrypt from "bcryptjs";
+import { INDUSTRIES, JOB_CATEGORIES } from "@/lib/categories";
 
 type ActionState = { error: string } | null;
 
@@ -52,4 +54,30 @@ export async function loggInnJobbsoker(
 export async function loggUtJobbsoker() {
   await clearJobSeekerSession();
   redirect("/stillinger");
+}
+
+export async function updateJobAlert(
+  alertId: string,
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const seeker = await getJobSeekerSession();
+  if (!seeker) return { error: "Ikke innlogget." };
+
+  const alert = await prisma.jobAlert.findUnique({ where: { id: alertId } });
+  if (!alert || alert.jobSeekerId !== seeker.id) return { error: "Varselet finnes ikke." };
+
+  const bransje = (formData.get("bransje") as string) || null;
+  const kategori = (formData.get("kategori") as string) || null;
+  const sted = (formData.get("sted") as string)?.trim() || null;
+
+  if (bransje && !INDUSTRIES.includes(bransje as never)) return { error: "Ugyldig bransje." };
+  if (kategori && !JOB_CATEGORIES.includes(kategori as never)) return { error: "Ugyldig kategori." };
+
+  const parts = [bransje, kategori, sted].filter(Boolean);
+  const name = parts.length ? parts.join(" · ") : "Alle nye stillinger";
+
+  await prisma.jobAlert.update({ where: { id: alertId }, data: { bransje, kategori, sted, name } });
+  revalidatePath("/jobbsoker");
+  return null;
 }
