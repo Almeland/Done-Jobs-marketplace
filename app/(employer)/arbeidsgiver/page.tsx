@@ -25,10 +25,13 @@ export default async function ArbeidgiverPage() {
 
   await expireStaleListings(user.accountId);
 
-  const listings = await prisma.jobListing.findMany({
-    where: { accountId: user.accountId },
-    orderBy: { updatedAt: "desc" },
-  });
+  const [listings, followerCount] = await Promise.all([
+    prisma.jobListing.findMany({
+      where: { accountId: user.accountId },
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.companyFollow.count({ where: { accountId: user.accountId } }),
+  ]);
 
   const drafts = listings.filter((l) => l.status === "DRAFT");
   const published = listings.filter((l) => l.status !== "DRAFT");
@@ -37,14 +40,25 @@ export default async function ArbeidgiverPage() {
     <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-[28px] font-semibold text-midnight tracking-tight">Annonser</h1>
-        <form action={opprettAnnonse}>
-          <button
-            type="submit"
-            className="bg-midnight text-pearl rounded-full px-5 py-2.5 text-sm font-medium hover:bg-midnight/90 transition-colors"
+        <div className="flex items-center gap-3">
+          <Link
+            href="/arbeidsgiver/folgere"
+            className="flex items-center gap-1.5 text-sm text-midnight/60 hover:text-midnight border border-platinum rounded-full px-4 py-2.5 hover:bg-platinum transition-colors"
           >
-            + Ny annonse
-          </button>
-        </form>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {followerCount} følger{followerCount !== 1 ? "e" : ""}
+          </Link>
+          <form action={opprettAnnonse}>
+            <button
+              type="submit"
+              className="bg-midnight text-pearl rounded-full px-5 py-2.5 text-sm font-medium hover:bg-midnight/90 transition-colors"
+            >
+              + Ny annonse
+            </button>
+          </form>
+        </div>
       </div>
 
       {listings.length === 0 && (

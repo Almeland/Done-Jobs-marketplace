@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import SokKnapp from "./SokKnapp";
 import ViewTracker from "./ViewTracker";
+import FolgBedrift from "./FolgBedrift";
 import Link from "next/link";
 
 export default async function StillingDetaljPage({
@@ -98,6 +99,11 @@ export default async function StillingDetaljPage({
       ) : (
         <p className="text-midnight/30 italic">Ingen annonsetekst.</p>
       )}
+
+      {/* Følg bedriften */}
+      <div className="mt-10 border-t border-platinum pt-8">
+        <FolgBedrift accountId={listing.accountId} companyName={listing.account.companyName} />
+      </div>
 
       {/* Kontaktperson */}
       {(listing.contactName || listing.contactEmail) && (

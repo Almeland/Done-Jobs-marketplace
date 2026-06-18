@@ -14,6 +14,7 @@ model Account {
   createdAt   DateTime     @default(now())
   users       User[]
   listings    JobListing[]
+  followers   CompanyFollow[]
 }
 
 model User {
@@ -67,6 +68,29 @@ model JobListing {
   updatedAt DateTime @updatedAt
 
   applications Application[]
+}
+
+model JobAlert {
+  id         String    @id @default(cuid())
+  email      String
+  bransje    String?
+  kategori   String?
+  sted       String?
+  token      String    @unique @default(cuid())
+  createdAt  DateTime  @default(now())
+  lastSentAt DateTime?
+}
+
+model CompanyFollow {
+  id             String   @id @default(cuid())
+  email          String
+  followerName   String?
+  accountId      String
+  account        Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  token          String   @unique @default(cuid())
+  createdAt      DateTime @default(now())
+
+  @@unique([email, accountId])
 }
 
 model Application {

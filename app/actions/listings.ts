@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { LISTING_DURATION_DAYS } from "@/lib/constants";
+import { triggerJobAlerts } from "@/lib/alert-utils";
 
 type ActionState = { error: string } | null;
 
@@ -109,6 +110,7 @@ export async function publiserAnnonse(listingId: string): Promise<ActionState> {
   });
 
   console.log(`[e-post stub] Annonse «${listing.title}» er nå publisert`);
+  await triggerJobAlerts(listingId);
   revalidatePath("/arbeidsgiver");
   return null;
 }

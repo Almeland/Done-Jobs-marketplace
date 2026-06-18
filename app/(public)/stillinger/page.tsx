@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import FilterPanel from "./FilterPanel";
+import JobAlertForm from "./JobAlertForm";
 
 export default async function StillingerPage({
   searchParams,
@@ -48,6 +49,10 @@ export default async function StillingerPage({
       </p>
 
       <FilterPanel bransje={bransje} kategori={kategori} sted={sted} locations={locations} />
+
+      <div className="mb-8">
+        <JobAlertForm bransje={bransje} kategori={kategori} sted={sted} />
+      </div>
 
       {listings.length > 0 && (
         <ul className="space-y-3">
