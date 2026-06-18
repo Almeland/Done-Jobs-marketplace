@@ -5,14 +5,21 @@ import { lagreAnnonse } from "@/app/actions/listings";
 import type { JobListingModel as JobListing } from "@/app/generated/prisma/models/JobListing";
 import Link from "next/link";
 import { INDUSTRIES, JOB_CATEGORIES } from "@/lib/categories";
+import AiAssistent from "./AiAssistent";
 
-type Props = { listing: JobListing };
+type Props = { listing: JobListing; companyName: string };
 
-export default function RedigerSkjema({ listing }: Props) {
+export default function RedigerSkjema({ listing, companyName }: Props) {
   const lagre = lagreAnnonse.bind(null, listing.id);
   const [state, action, pending] = useActionState(lagre, null);
   const formRef = useRef<HTMLFormElement>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [title, setTitle] = useState(listing.title ?? "");
+  const [location, setLocation] = useState(listing.location ?? "");
+  const [industry, setIndustry] = useState(listing.industry ?? "");
+  const [jobCategory, setJobCategory] = useState(listing.jobCategory ?? "");
+  const [body, setBody] = useState(listing.body ?? "");
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function scheduleAutosave() {
@@ -55,7 +62,8 @@ export default function RedigerSkjema({ listing }: Props) {
         <input
           name="title"
           type="text"
-          defaultValue={listing.title ?? ""}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
           placeholder="f.eks. Frontendutvikler"
         />
@@ -70,7 +78,8 @@ export default function RedigerSkjema({ listing }: Props) {
           <input
             name="location"
             type="text"
-            defaultValue={listing.location ?? ""}
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
             className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
             placeholder="f.eks. Oslo"
           />
@@ -81,7 +90,8 @@ export default function RedigerSkjema({ listing }: Props) {
           </label>
           <select
             name="industry"
-            defaultValue={listing.industry ?? ""}
+            value={industry}
+            onChange={(e) => setIndustry(e.target.value)}
             className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight focus:outline-none focus:ring-2 focus:ring-violet/40"
           >
             <option value="">Velg bransje</option>
@@ -96,7 +106,8 @@ export default function RedigerSkjema({ listing }: Props) {
           </label>
           <select
             name="jobCategory"
-            defaultValue={listing.jobCategory ?? ""}
+            value={jobCategory}
+            onChange={(e) => setJobCategory(e.target.value)}
             className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight focus:outline-none focus:ring-2 focus:ring-violet/40"
           >
             <option value="">Velg kategori</option>
@@ -107,15 +118,33 @@ export default function RedigerSkjema({ listing }: Props) {
         </div>
       </div>
 
+      {/* AI-assistent */}
+      <AiAssistent
+        title={title}
+        companyName={companyName}
+        location={location}
+        industry={industry}
+        jobCategory={jobCategory}
+        onGenerated={(text) => {
+          setBody(text);
+          if (bodyRef.current) {
+            bodyRef.current.value = text;
+            formRef.current?.requestSubmit();
+          }
+        }}
+      />
+
       {/* Annonsetekst */}
       <div>
         <label className="block text-sm font-medium text-midnight/60 mb-1.5">
           Annonsetekst
         </label>
         <textarea
+          ref={bodyRef}
           name="body"
           rows={12}
-          defaultValue={listing.body ?? ""}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
           className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40 font-mono"
           placeholder="Beskriv stillingen, arbeidsoppgaver, kvalifikasjoner…"
         />
@@ -204,7 +233,7 @@ export default function RedigerSkjema({ listing }: Props) {
   );
 }
 
-function SoknadsMottak({ listing }: Props) {
+function SoknadsMottak({ listing }: { listing: import("@/app/generated/prisma/models/JobListing").JobListingModel }) {
   return (
     <fieldset className="border border-platinum rounded-2xl p-5">
       <legend className="text-sm font-medium text-midnight/60 px-1">

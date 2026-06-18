@@ -17,17 +17,20 @@ export default async function RedigerAnnonsePage({
 
   await expireStaleListings(user.accountId);
 
-  const listing = await prisma.jobListing.findUnique({ where: { id } });
+  const listing = await prisma.jobListing.findUnique({
+    where: { id },
+    include: { account: true },
+  });
   if (!listing || listing.accountId !== user.accountId) notFound();
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-8">
+      <h1 className="text-[24px] font-semibold text-midnight tracking-tight mb-8">
         {listing.title ?? "Uten tittel"}
       </h1>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 items-start">
         <div>
-          <RedigerSkjema listing={listing} />
+          <RedigerSkjema listing={listing} companyName={listing.account.companyName} />
           <div className="mt-4 flex items-center gap-4">
             {listing.status === "DRAFT" && (
               <SlettKnapp listingId={listing.id} />
