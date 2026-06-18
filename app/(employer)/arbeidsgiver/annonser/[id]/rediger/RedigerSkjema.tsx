@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useCallback } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { lagreAnnonse } from "@/app/actions/listings";
 import type { JobListingModel as JobListing } from "@/app/generated/prisma/models/JobListing";
 import Link from "next/link";
@@ -10,13 +10,36 @@ type Props = { listing: JobListing };
 export default function RedigerSkjema({ listing }: Props) {
   const lagre = lagreAnnonse.bind(null, listing.id);
   const [state, action, pending] = useActionState(lagre, null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function scheduleAutosave() {
+    if (listing.status !== "DRAFT") return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      formRef.current?.requestSubmit();
+    }, 1500);
+  }
+
+  useEffect(() => {
+    if (!pending && state === null) {
+      setSavedAt(new Date());
+    }
+  }, [pending, state]);
 
   const deadline = listing.applicationDeadline
     ? new Date(listing.applicationDeadline).toISOString().split("T")[0]
     : "";
 
   return (
-    <form action={action} className="space-y-8" noValidate>
+    <form
+      ref={formRef}
+      action={action}
+      className="space-y-8"
+      noValidate
+      onChange={scheduleAutosave}
+    >
       {state?.error && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
           {state.error}
@@ -101,7 +124,7 @@ export default function RedigerSkjema({ listing }: Props) {
         />
       </div>
 
-      {/* Søknadsmottak (US-03) */}
+      {/* Søknadsmottak */}
       <SoknadsMottak listing={listing} />
 
       {/* Handlinger */}
@@ -112,13 +135,23 @@ export default function RedigerSkjema({ listing }: Props) {
         >
           ← Tilbake
         </Link>
-        <button
-          type="submit"
-          disabled={pending}
-          className="bg-blue-600 text-white rounded-md px-5 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-        >
-          {pending ? "Lagrer…" : "Lagre utkast"}
-        </button>
+        <div className="flex items-center gap-3">
+          {savedAt && !pending && !state?.error && (
+            <span className="text-xs text-gray-400">
+              Lagret {savedAt.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+          {pending && (
+            <span className="text-xs text-gray-400">Lagrer…</span>
+          )}
+          <button
+            type="submit"
+            disabled={pending}
+            className="bg-blue-600 text-white rounded-md px-5 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          >
+            {pending ? "Lagrer…" : "Lagre"}
+          </button>
+        </div>
       </div>
     </form>
   );

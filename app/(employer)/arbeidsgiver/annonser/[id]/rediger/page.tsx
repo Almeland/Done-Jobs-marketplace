@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import RedigerSkjema from "./RedigerSkjema";
+import SlettKnapp from "./SlettKnapp";
 
 export default async function RedigerAnnonsePage({
   params,
@@ -20,6 +21,11 @@ export default async function RedigerAnnonsePage({
         {listing.title ?? "Uten tittel"}
       </h1>
       <RedigerSkjema listing={listing} />
+      {listing.status === "DRAFT" && (
+        <div className="mt-4">
+          <SlettKnapp listingId={listing.id} />
+        </div>
+      )}
     </div>
   );
 }

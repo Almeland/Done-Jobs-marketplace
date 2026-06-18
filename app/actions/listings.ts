@@ -74,3 +74,19 @@ export async function lagreAnnonse(
   revalidatePath("/arbeidsgiver");
   return null;
 }
+
+export async function slettUtkast(listingId: string): Promise<ActionState> {
+  const user = await requireAuth();
+
+  const listing = await prisma.jobListing.findUnique({
+    where: { id: listingId },
+  });
+  if (!listing || listing.accountId !== user.accountId)
+    return { error: "Annonsen finnes ikke." };
+  if (listing.status !== "DRAFT")
+    return { error: "Kun utkast kan slettes herfra." };
+
+  await prisma.jobListing.delete({ where: { id: listingId } });
+  revalidatePath("/arbeidsgiver");
+  redirect("/arbeidsgiver");
+}
