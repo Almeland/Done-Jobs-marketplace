@@ -1,0 +1,1 @@
+export const LISTING_DURATION_DAYS = 60;
