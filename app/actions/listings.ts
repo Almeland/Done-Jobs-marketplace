@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { LISTING_DURATION_DAYS } from "@/lib/constants";
 
 type ActionState = { error: string } | null;
 
@@ -69,6 +70,75 @@ export async function lagreAnnonse(
       receiptEmail: receiptMethod === "EMAIL" ? receiptEmail : null,
       receiptUrl: receiptMethod === "EXTERNAL_URL" ? receiptUrl : null,
     },
+  });
+
+  revalidatePath("/arbeidsgiver");
+  return null;
+}
+
+export async function publiserAnnonse(listingId: string): Promise<ActionState> {
+  const user = await requireAuth();
+  const listing = await prisma.jobListing.findUnique({ where: { id: listingId } });
+  if (!listing || listing.accountId !== user.accountId)
+    return { error: "Annonsen finnes ikke." };
+  if (listing.status !== "DRAFT" && listing.status !== "STOPPED")
+    return { error: "Annonsen kan ikke publiseres fra denne statusen." };
+
+  const now = new Date();
+  const firstPublishedAt = listing.firstPublishedAt ?? now;
+  const expiresAt =
+    listing.expiresAt ??
+    new Date(firstPublishedAt.getTime() + LISTING_DURATION_DAYS * 86_400_000);
+
+  if (expiresAt <= now) return { error: "Annonsen er utløpt og kan ikke reaktiveres." };
+
+  await prisma.jobListing.update({
+    where: { id: listingId },
+    data: {
+      status: "ACTIVE",
+      firstPublishedAt,
+      publishedAt: now,
+      expiresAt,
+    },
+  });
+
+  console.log(`[e-post stub] Annonse «${listing.title}» er nå publisert`);
+  revalidatePath("/arbeidsgiver");
+  return null;
+}
+
+export async function stoppAnnonse(listingId: string): Promise<ActionState> {
+  const user = await requireAuth();
+  const listing = await prisma.jobListing.findUnique({ where: { id: listingId } });
+  if (!listing || listing.accountId !== user.accountId)
+    return { error: "Annonsen finnes ikke." };
+  if (listing.status !== "ACTIVE")
+    return { error: "Kun aktive annonser kan stoppes." };
+
+  await prisma.jobListing.update({
+    where: { id: listingId },
+    data: { status: "STOPPED" },
+  });
+
+  revalidatePath("/arbeidsgiver");
+  return null;
+}
+
+export async function reaktiverAnnonse(listingId: string): Promise<ActionState> {
+  const user = await requireAuth();
+  const listing = await prisma.jobListing.findUnique({ where: { id: listingId } });
+  if (!listing || listing.accountId !== user.accountId)
+    return { error: "Annonsen finnes ikke." };
+  if (listing.status !== "STOPPED")
+    return { error: "Kun stoppede annonser kan reaktiveres." };
+
+  const now = new Date();
+  if (listing.expiresAt && listing.expiresAt <= now)
+    return { error: "Annonsen er utløpt og kan ikke reaktiveres." };
+
+  await prisma.jobListing.update({
+    where: { id: listingId },
+    data: { status: "ACTIVE", publishedAt: now },
   });
 
   revalidatePath("/arbeidsgiver");

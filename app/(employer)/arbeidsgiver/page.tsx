@@ -2,10 +2,13 @@ import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { opprettAnnonse } from "@/app/actions/listings";
 import { utfyllingsgrad, relativTid } from "@/lib/listing-utils";
+import { expireStaleListings } from "@/lib/expire-listings";
 import Link from "next/link";
 
 export default async function ArbeidgiverPage() {
   const user = await requireAuth();
+
+  await expireStaleListings(user.accountId);
 
   const listings = await prisma.jobListing.findMany({
     where: { accountId: user.accountId },
