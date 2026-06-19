@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getJobSeekerSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
+export const maxDuration = 60;
+
 const client = new Anthropic();
 
 export async function POST(req: Request) {

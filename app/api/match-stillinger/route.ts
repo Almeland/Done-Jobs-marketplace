@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getJobSeekerSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
+export const maxDuration = 60;
+
 const client = new Anthropic();
 
 export type MatchResult = {
@@ -27,7 +29,7 @@ export async function POST() {
     where: { status: "ACTIVE" },
     include: { account: { select: { companyName: true } } },
     orderBy: { publishedAt: "desc" },
-    take: 30,
+    take: 15,
   });
 
   if (listings.length === 0) {
@@ -42,7 +44,7 @@ Bedrift: ${l.account.companyName}
 Sted: ${l.location ?? "Ikke oppgitt"}
 Bransje: ${l.industry ?? "Ikke oppgitt"}
 Kategori: ${l.jobCategory ?? "Ikke oppgitt"}
-Annonsetekst: ${(l.body ?? "").replace(/<[^>]+>/g, "").slice(0, 600)}`
+Annonsetekst: ${(l.body ?? "").replace(/<[^>]+>/g, "").slice(0, 300)}`
     )
     .join("\n\n---\n\n");
 
