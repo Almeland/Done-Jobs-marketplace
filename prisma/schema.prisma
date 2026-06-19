@@ -32,6 +32,9 @@ model JobSeeker {
   passwordHash String
   createdAt    DateTime @default(now())
 
+  cvText   String?
+  cvParsed String?
+
   follows      CompanyFollow[]
   alerts       JobAlert[]
   applications Application[]
