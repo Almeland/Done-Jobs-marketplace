@@ -16,6 +16,7 @@ export default async function ProfilPage() {
       foundedYear: true,
       cultureValues: true,
       benefits: true,
+      orgNumber: true,
       companyName: true,
       id: true,
     },

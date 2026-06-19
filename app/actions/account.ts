@@ -18,11 +18,16 @@ export async function lagreProfil(
   const employeeCount = (formData.get("employeeCount") as string) || null;
   const foundedYearRaw = formData.get("foundedYear") as string;
   const foundedYear = foundedYearRaw ? parseInt(foundedYearRaw, 10) || null : null;
+  const orgNumber = (formData.get("orgNumber") as string)?.replace(/\s/g, "") || null;
   const cultureValues = formData.getAll("cultureValues") as string[];
   const benefits = formData.getAll("benefits") as string[];
 
-  if (website) {
-    try { new URL(website); } catch { return { error: "Ugyldig nettside-URL." }; }
+  let normalizedWebsite = website;
+  if (normalizedWebsite && !/^https?:\/\//i.test(normalizedWebsite)) {
+    normalizedWebsite = `https://${normalizedWebsite}`;
+  }
+  if (normalizedWebsite) {
+    try { new URL(normalizedWebsite); } catch { return { error: "Ugyldig nettside-URL." }; }
   }
 
   await prisma.account.update({
@@ -30,9 +35,10 @@ export async function lagreProfil(
     data: {
       tagline,
       description,
-      website,
+      website: normalizedWebsite,
       employeeCount,
       foundedYear,
+      orgNumber,
       cultureValues: JSON.stringify(cultureValues),
       benefits: JSON.stringify(benefits),
     },

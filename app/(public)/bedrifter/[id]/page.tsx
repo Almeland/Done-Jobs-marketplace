@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getJobSeekerSession } from "@/lib/session";
 import Link from "next/link";
 import FolgKnapp from "../FolgKnapp";
-import { CULTURE_TAGS } from "@/lib/culture-options";
+import { fetchEnhet, fetchRegnskap } from "@/lib/brreg";
 
 export default async function BedriftProfilPage({
   params,
@@ -43,6 +43,10 @@ export default async function BedriftProfilPage({
   const benefits: string[] = (() => {
     try { return JSON.parse(account.benefits ?? "[]"); } catch { return []; }
   })();
+
+  const [brregEnhet, brregRegnskap] = account.orgNumber
+    ? await Promise.all([fetchEnhet(account.orgNumber), fetchRegnskap(account.orgNumber)])
+    : [null, []];
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-14">
@@ -138,9 +142,68 @@ export default async function BedriftProfilPage({
         </section>
       )}
 
-      {(account.description || cultureValues.length > 0 || benefits.length > 0) && (
-        <div className="border-t border-platinum mb-10" />
+      {/* Firmadata fra Brønnøysund */}
+      {brregEnhet && (
+        <section className="mb-10 border-t border-platinum pt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-xs font-semibold text-midnight/40 uppercase tracking-widest">
+              Firmadata
+            </h2>
+            <span className="text-xs text-midnight/25">· Kilde: Brønnøysundregistrene</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {brregEnhet.antallAnsatte != null && (
+              <Faktaboks label="Ansatte" value={brregEnhet.antallAnsatte.toLocaleString("nb-NO")} />
+            )}
+            {brregEnhet.stiftelsesdato && (
+              <Faktaboks label="Stiftet" value={brregEnhet.stiftelsesdato.slice(0, 4)} />
+            )}
+            {brregEnhet.organisasjonsform && (
+              <Faktaboks label="Selskapsform" value={brregEnhet.organisasjonsform.beskrivelse} />
+            )}
+            {brregEnhet.forretningsadresse && (
+              <Faktaboks label="Adresse" value={brregEnhet.forretningsadresse.poststed} />
+            )}
+            {brregEnhet.naeringskode1 && (
+              <Faktaboks label="Næring" value={brregEnhet.naeringskode1.beskrivelse} className="col-span-2" />
+            )}
+          </div>
+
+          {brregRegnskap.length > 0 && (
+            <div className="mt-5">
+              <p className="text-xs font-semibold text-midnight/40 uppercase tracking-widest mb-3">Økonomi</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-platinum">
+                      <th className="text-left text-xs text-midnight/40 font-medium pb-2">År</th>
+                      <th className="text-right text-xs text-midnight/40 font-medium pb-2">Omsetning</th>
+                      <th className="text-right text-xs text-midnight/40 font-medium pb-2">Driftsresultat</th>
+                      <th className="text-right text-xs text-midnight/40 font-medium pb-2">Årsresultat</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-platinum">
+                    {brregRegnskap.map((r) => (
+                      <tr key={r.aar}>
+                        <td className="py-2.5 text-midnight/70 font-medium">{r.aar}</td>
+                        <td className="py-2.5 text-right text-midnight/70">{r.omsetning != null ? formatKr(r.omsetning) : "—"}</td>
+                        <td className={`py-2.5 text-right font-medium ${(r.driftsresultat ?? 0) >= 0 ? "text-emerald-brand" : "text-red-brand"}`}>
+                          {r.driftsresultat != null ? formatKr(r.driftsresultat) : "—"}
+                        </td>
+                        <td className={`py-2.5 text-right font-medium ${(r.aarsresultat ?? 0) >= 0 ? "text-emerald-brand" : "text-red-brand"}`}>
+                          {r.aarsresultat != null ? formatKr(r.aarsresultat) : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
       )}
+
+      <div className="border-t border-platinum mb-10" />
 
       {/* Aktive stillinger */}
       <section>
@@ -179,4 +242,21 @@ export default async function BedriftProfilPage({
       </section>
     </div>
   );
+}
+
+function Faktaboks({ label, value, className = "" }: { label: string; value: string; className?: string }) {
+  return (
+    <div className={`bg-white border border-platinum rounded-xl px-4 py-3 ${className}`}>
+      <p className="text-xs text-midnight/40 mb-0.5">{label}</p>
+      <p className="text-sm font-medium text-midnight">{value}</p>
+    </div>
+  );
+}
+
+function formatKr(n: number): string {
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "−" : "";
+  if (abs >= 1_000_000_000) return `${sign}${(abs / 1_000_000_000).toFixed(1)} mrd`;
+  if (abs >= 1_000_000) return `${sign}${Math.round(abs / 1_000_000)} mill`;
+  return `${sign}${abs.toLocaleString("nb-NO")} kr`;
 }

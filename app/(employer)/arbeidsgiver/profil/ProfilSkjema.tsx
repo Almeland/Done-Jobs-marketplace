@@ -13,6 +13,7 @@ type Account = {
   foundedYear: number | null;
   cultureValues: string | null;
   benefits: string | null;
+  orgNumber: string | null;
 };
 
 export default function ProfilSkjema({ account }: { account: Account }) {
@@ -70,13 +71,28 @@ export default function ProfilSkjema({ account }: { account: Account }) {
         />
       </div>
 
+      {/* Org.nummer */}
+      <div>
+        <label className="block text-sm font-medium text-midnight/60 mb-1.5">
+          Organisasjonsnummer
+          <span className="text-midnight/30 font-normal"> — henter firmadata fra Brønnøysund automatisk</span>
+        </label>
+        <input
+          name="orgNumber"
+          type="text"
+          defaultValue={account.orgNumber ?? ""}
+          className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
+          placeholder="f.eks. 917 890 619"
+        />
+      </div>
+
       {/* Nettside + Etablert + Ansatte */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="sm:col-span-1">
           <label className="block text-sm font-medium text-midnight/60 mb-1.5">Nettside</label>
           <input
             name="website"
-            type="url"
+            type="text"
             defaultValue={account.website ?? ""}
             className="w-full border border-platinum bg-white rounded-xl px-4 py-3 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
             placeholder="https://dinbedrift.no"

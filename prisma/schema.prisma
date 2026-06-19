@@ -18,6 +18,7 @@ model Account {
   foundedYear   Int?
   cultureValues String?
   benefits      String?
+  orgNumber     String?
   createdAt   DateTime     @default(now())
   users       User[]
   listings    JobListing[]
