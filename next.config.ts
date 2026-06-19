@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: [
+    "@libsql/client",
+    "better-sqlite3",
+    "@prisma/adapter-libsql",
+    "@prisma/adapter-better-sqlite3",
+  ],
 };
 
 export default nextConfig;
