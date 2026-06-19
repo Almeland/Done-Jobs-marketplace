@@ -1,7 +1,8 @@
 "use client";
 
 import { useTransition, useState } from "react";
-import { oppdaterSoknadsStatus, APPLICATION_STATUSES } from "@/app/actions/applications";
+import { oppdaterSoknadsStatus } from "@/app/actions/applications";
+import { APPLICATION_STATUSES } from "@/lib/application-statuses";
 
 type Props = {
   applicationId: string;

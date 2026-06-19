@@ -66,7 +66,6 @@ export default async function BedrifterPage() {
                           href={a.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
                           className="text-xs text-violet hover:text-violet/70 truncate max-w-[140px]"
                         >
                           {a.website.replace(/^https?:\/\//, "")}

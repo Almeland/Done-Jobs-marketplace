@@ -3,7 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import StatusVelger from "./StatusVelger";
-import { APPLICATION_STATUSES } from "@/app/actions/applications";
+import { APPLICATION_STATUSES } from "@/lib/application-statuses";
 
 export default async function SoknaderPage({
   params,
