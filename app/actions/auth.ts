@@ -4,8 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createSession, clearSession } from "@/lib/session";
 import bcrypt from "bcryptjs";
-import { writeFile } from "fs/promises";
-import path from "path";
+import { put } from "@vercel/blob";
 
 type ActionState = { error: string } | null;
 
@@ -31,13 +30,8 @@ export async function registrer(
   let logoUrl: string | null = null;
   if (logoFile && logoFile.size > 0) {
     const ext = logoFile.name.split(".").pop() ?? "png";
-    const filename = `logo-${Date.now()}.${ext}`;
-    const buffer = Buffer.from(await logoFile.arrayBuffer());
-    await writeFile(
-      path.join(process.cwd(), "public/uploads", filename),
-      buffer
-    );
-    logoUrl = `/uploads/${filename}`;
+    const blob = await put(`logoer/logo-${Date.now()}.${ext}`, logoFile, { access: "public" });
+    logoUrl = blob.url;
   }
 
   const passwordHash = await bcrypt.hash(password, 10);

@@ -3,8 +3,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getJobSeekerSession } from "@/lib/session";
-import { writeFile } from "fs/promises";
-import path from "path";
+import { put } from "@vercel/blob";
 
 type ActionState = { error: string } | null;
 
@@ -36,13 +35,8 @@ export async function sendSoknad(
   let cvFileUrl: string | null = null;
   if (cvFile && cvFile.size > 0) {
     const ext = cvFile.name.split(".").pop() ?? "pdf";
-    const filename = `cv-${Date.now()}.${ext}`;
-    const buffer = Buffer.from(await cvFile.arrayBuffer());
-    await writeFile(
-      path.join(process.cwd(), "public/uploads", filename),
-      buffer
-    );
-    cvFileUrl = `/uploads/${filename}`;
+    const blob = await put(`cv/${Date.now()}.${ext}`, cvFile, { access: "public" });
+    cvFileUrl = blob.url;
   }
 
   const jobSeeker = await getJobSeekerSession();
