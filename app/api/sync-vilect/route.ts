@@ -30,7 +30,7 @@ export async function GET(req: Request) {
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
-    ignoreNameSpace: true,
+    removeNSPrefix: true,
     isArray: (name) => ["Vacancy", "Department", "Version"].includes(name),
   });
 
