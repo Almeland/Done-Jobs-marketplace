@@ -92,7 +92,7 @@ export async function GET(req: Request) {
           location,
           applicationDeadline,
           expiresAt,
-          receiptMethod: "URL",
+          receiptMethod: "EXTERNAL_URL",
           receiptUrl: vacancyUrl,
           status: "ACTIVE",
           publishedAt: new Date(),

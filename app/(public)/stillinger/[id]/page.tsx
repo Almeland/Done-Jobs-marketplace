@@ -105,8 +105,23 @@ export default async function StillingDetaljPage({
           className="prose prose-midnight max-w-none text-[16px] leading-relaxed text-midnight/80"
           dangerouslySetInnerHTML={{ __html: listing.body }}
         />
-      ) : (
-        <p className="text-midnight/30 italic">Ingen annonsetekst.</p>
+      ) : null}
+
+      {/* Ekstern lenke for Vilect-stillinger */}
+      {listing.receiptMethod === "EXTERNAL_URL" && listing.receiptUrl && (
+        <div className="mt-6 p-5 rounded-2xl bg-lavender border border-violet/10">
+          <p className="text-sm text-midnight/60 mb-3">
+            Full stillingsbeskrivelse ligger på arbeidsgivers side.
+          </p>
+          <a
+            href={listing.receiptUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-violet hover:text-violet/80 underline underline-offset-2"
+          >
+            Se full annonse og søk →
+          </a>
+        </div>
       )}
 
       {/* Følg bedriften */}
