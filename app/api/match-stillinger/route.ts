@@ -14,7 +14,8 @@ export type MatchResult = {
   mangler: string[];
 };
 
-function preFilter(listings: typeof allListings, cvParsed: string, limit = 8) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function preFilter(listings: any[], cvParsed: string, limit = 8) {
   const cv = cvParsed.toLowerCase();
   const scored = listings.map((l) => {
     const haystack = [l.title, l.industry, l.jobCategory, l.location, l.body]
@@ -22,15 +23,12 @@ function preFilter(listings: typeof allListings, cvParsed: string, limit = 8) {
       .join(" ")
       .toLowerCase();
     const words = cv.match(/\b\w{4,}\b/g) ?? [];
-    const hits = words.filter((w) => haystack.includes(w)).length;
+    const hits = words.filter((w: string) => haystack.includes(w)).length;
     return { listing: l, hits };
   });
   scored.sort((a, b) => b.hits - a.hits);
   return scored.slice(0, limit).map((s) => s.listing);
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type allListings = any;
 
 export async function POST() {
   const jobSeeker = await getJobSeekerSession();
