@@ -79,6 +79,9 @@ model JobListing {
   salaryMax  Int?
   salaryType String?
 
+  vilectId   String?
+  source     String?
+
   receiptMethod String?
   receiptEmail  String?
   receiptUrl    String?
