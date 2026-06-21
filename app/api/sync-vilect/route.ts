@@ -68,20 +68,23 @@ export async function GET(req: Request) {
     const location = locationParts.join(", ") || null;
     const deadlineRaw = (version.ApplicationDeadline as string) || null;
     const dateEnd = v["@_date_end"] as string | null;
+    const dateStart = v["@_date_start"] as string | null;
 
-    const body = [heading, engagement ? `Stillingstype: ${engagement}` : null]
-      .filter(Boolean)
-      .join("\n\n") || null;
+    const bodyParts: string[] = [];
+    if (heading) bodyParts.push(`<p><strong>${heading}</strong></p>`);
+    if (engagement) bodyParts.push(`<p>Stillingstype: ${engagement}</p>`);
+    const body = bodyParts.join("\n") || null;
 
     const applicationDeadline = parseDeadline(deadlineRaw);
     const expiresAt = dateEnd ? new Date(dateEnd) : null;
+    const publishedAt = dateStart ? new Date(dateStart) : new Date();
 
     const existing = await prisma.jobListing.findFirst({ where: { vilectId } });
 
     if (existing) {
       await prisma.jobListing.update({
         where: { id: existing.id },
-        data: { title, body, location, applicationDeadline, expiresAt, status: "ACTIVE", accountId: account.id },
+        data: { title, body, location, applicationDeadline, expiresAt, status: "ACTIVE", accountId: account.id, publishedAt, firstPublishedAt: publishedAt },
       });
       updated++;
     } else {
@@ -99,8 +102,8 @@ export async function GET(req: Request) {
           receiptMethod: "EXTERNAL_URL",
           receiptUrl: vacancyUrl,
           status: "ACTIVE",
-          publishedAt: new Date(),
-          firstPublishedAt: new Date(),
+          publishedAt,
+          firstPublishedAt: publishedAt,
         },
       });
       added++;
