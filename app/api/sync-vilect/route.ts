@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 export const maxDuration = 60;
 
 const FEED_URL = process.env.VILECT_FEED_URL!;
-const ACCOUNT_ID = process.env.VILECT_ACCOUNT_ID!;
 const SYSTEM_USER_ID = process.env.VILECT_SYSTEM_USER_ID!;
 
 function parseDeadline(raw: string | null): Date | null {
@@ -50,22 +49,27 @@ export async function GET(req: Request) {
     const depts = (v.Departments as Record<string, unknown>)?.Department as Record<string, unknown>[];
     const dept = depts?.[0] ?? {};
 
+    const vilectDepartmentId = String(dept["@_id"] ?? `dept-${vilectId}`);
+    const companyName = (dept.Name as string) || "Ukjent bedrift";
+    const vacancyUrl = (dept.VacancyURL as string) || null;
+
+    // Upsert ett selskap per department
+    const account = await prisma.account.upsert({
+      where: { vilectDepartmentId },
+      create: { companyName, vilectDepartmentId },
+      update: { companyName },
+    });
+
     const title = (version.Title as string) || null;
     const heading = (version.TitleHeading as string) || null;
     const engagement = (version.Engagement as string) || null;
-    const county = (version.Region as Record<string, unknown>)?.Country as Record<string, unknown>;
-    const locationParts = [version.Location as string, county?.County as string].filter(Boolean);
+    const county = ((version.Region as Record<string, unknown>)?.Country as Record<string, unknown>)?.County as string;
+    const locationParts = [version.Location as string, county].filter(Boolean);
     const location = locationParts.join(", ") || null;
     const deadlineRaw = (version.ApplicationDeadline as string) || null;
-    const companyName = (dept.Name as string) || null;
-    const vacancyUrl = (dept.VacancyURL as string) || null;
     const dateEnd = v["@_date_end"] as string | null;
 
-    const body = [
-      heading,
-      companyName ? `Bedrift: ${companyName}` : null,
-      engagement ? `Stillingstype: ${engagement}` : null,
-    ]
+    const body = [heading, engagement ? `Stillingstype: ${engagement}` : null]
       .filter(Boolean)
       .join("\n\n") || null;
 
@@ -77,13 +81,13 @@ export async function GET(req: Request) {
     if (existing) {
       await prisma.jobListing.update({
         where: { id: existing.id },
-        data: { title, body, location, applicationDeadline, expiresAt, status: "ACTIVE" },
+        data: { title, body, location, applicationDeadline, expiresAt, status: "ACTIVE", accountId: account.id },
       });
       updated++;
     } else {
       await prisma.jobListing.create({
         data: {
-          accountId: ACCOUNT_ID,
+          accountId: account.id,
           createdById: SYSTEM_USER_ID,
           vilectId,
           source: "vilect",

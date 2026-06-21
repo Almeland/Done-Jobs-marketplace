@@ -19,6 +19,7 @@ model Account {
   cultureValues String?
   benefits      String?
   orgNumber     String?
+  vilectDepartmentId String? @unique
   createdAt   DateTime     @default(now())
   users       User[]
   listings    JobListing[]
