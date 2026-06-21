@@ -25,7 +25,7 @@ export default async function PublicLayout({
             {seeker ? (
               <>
                 <Link href="/jobbsoker" className="text-sm font-medium text-midnight/70 hover:text-midnight transition-colors">
-                  {seeker.name.split(" ")[0]}
+                  Mine søknader ({seeker.name.split(" ")[0]})
                 </Link>
                 <form action={loggUtJobbsoker}>
                   <button type="submit" className="text-sm text-midnight/40 hover:text-midnight transition-colors">
