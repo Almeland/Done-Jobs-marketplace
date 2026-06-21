@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { INDUSTRIES, JOB_CATEGORIES } from "@/lib/categories";
 
 const SALARY_OPTIONS = [
@@ -15,17 +16,19 @@ type Props = {
   kategori: string;
   sted: string;
   lonn: string;
+  q: string;
   locations: string[];
 };
 
 const select =
   "border border-platinum bg-white rounded-full px-4 py-2 text-sm text-midnight focus:outline-none focus:ring-2 focus:ring-violet/40 cursor-pointer";
 
-export default function FilterPanel({ bransje, kategori, sted, lonn, locations }: Props) {
+export default function FilterPanel({ bransje, kategori, sted, lonn, q, locations }: Props) {
   const router = useRouter();
+  const [søk, setSøk] = useState(q);
 
-  function update(key: "bransje" | "kategori" | "sted" | "lonn", value: string) {
-    const current = { bransje, kategori, sted, lonn, [key]: value };
+  function update(key: "bransje" | "kategori" | "sted" | "lonn" | "q", value: string) {
+    const current = { bransje, kategori, sted, lonn, q, [key]: value };
     const p = new URLSearchParams();
     Object.entries(current).forEach(([k, v]) => {
       if (v) p.set(k, v);
@@ -33,10 +36,29 @@ export default function FilterPanel({ bransje, kategori, sted, lonn, locations }
     router.push(`/stillinger${p.size ? `?${p}` : ""}`);
   }
 
-  const hasFilters = !!(bransje || kategori || sted || lonn);
+  const hasFilters = !!(bransje || kategori || sted || lonn || q);
 
   return (
-    <div className="flex flex-wrap items-center gap-3 mb-8">
+    <div className="space-y-3 mb-8">
+      <form
+        onSubmit={(e) => { e.preventDefault(); update("q", søk); }}
+        className="flex gap-2"
+      >
+        <input
+          type="text"
+          value={søk}
+          onChange={(e) => setSøk(e.target.value)}
+          placeholder="Søk på stilling, bedrift eller sted..."
+          className="flex-1 border border-platinum bg-white rounded-full px-4 py-2 text-sm text-midnight placeholder:text-midnight/30 focus:outline-none focus:ring-2 focus:ring-violet/40"
+        />
+        <button
+          type="submit"
+          className="bg-violet text-pearl rounded-full px-5 py-2 text-sm font-medium hover:bg-violet/90 transition-colors"
+        >
+          Søk
+        </button>
+      </form>
+      <div className="flex flex-wrap items-center gap-3">
       <select
         value={bransje}
         onChange={(e) => update("bransje", e.target.value)}
@@ -91,14 +113,15 @@ export default function FilterPanel({ bransje, kategori, sted, lonn, locations }
         ))}
       </select>
 
-      {hasFilters && (
-        <button
-          onClick={() => router.push("/stillinger")}
-          className="text-sm text-violet hover:text-violet/70 font-medium"
-        >
-          Nullstill filter
-        </button>
-      )}
+        {hasFilters && (
+          <button
+            onClick={() => { setSøk(""); router.push("/stillinger"); }}
+            className="text-sm text-violet hover:text-violet/70 font-medium"
+          >
+            Nullstill filter
+          </button>
+        )}
+      </div>
     </div>
   );
 }

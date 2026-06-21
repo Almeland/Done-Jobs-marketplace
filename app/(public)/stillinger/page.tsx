@@ -23,6 +23,7 @@ export default async function StillingerPage({
   const kategori = sp.kategori ?? "";
   const sted = sp.sted ?? "";
   const lonn = sp.lonn ?? "";
+  const q = sp.q ?? "";
 
   const bracket = SALARY_BRACKETS.find((b) => b.value === lonn);
 
@@ -33,6 +34,14 @@ export default async function StillingerPage({
         ...(bransje ? { industry: bransje } : {}),
         ...(kategori ? { jobCategory: kategori } : {}),
         ...(sted ? { location: sted } : {}),
+        ...(q ? {
+          OR: [
+            { title: { contains: q } },
+            { body: { contains: q } },
+            { location: { contains: q } },
+            { account: { companyName: { contains: q } } },
+          ],
+        } : {}),
         ...(bracket
           ? {
               salaryType: "ANNUAL",
@@ -53,7 +62,7 @@ export default async function StillingerPage({
   ]);
 
   const locations = locationRows.map((r) => r.location as string).sort();
-  const hasFilters = !!(bransje || kategori || sted || lonn);
+  const hasFilters = !!(bransje || kategori || sted || lonn || q);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-14">
@@ -68,7 +77,7 @@ export default async function StillingerPage({
           : `${listings.length} stilling${listings.length !== 1 ? "er" : ""} utlyst`}
       </p>
 
-      <FilterPanel bransje={bransje} kategori={kategori} sted={sted} lonn={lonn} locations={locations} />
+      <FilterPanel bransje={bransje} kategori={kategori} sted={sted} lonn={lonn} q={q} locations={locations} />
 
       <div className="mb-8">
         <JobAlertForm bransje={bransje} kategori={kategori} sted={sted} />
