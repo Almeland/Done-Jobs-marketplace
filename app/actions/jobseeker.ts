@@ -56,6 +56,26 @@ export async function loggUtJobbsoker() {
   redirect("/stillinger");
 }
 
+export async function lagreCVParsed(
+  cvParsedJson: string
+): Promise<{ success: boolean; error?: string }> {
+  const seeker = await getJobSeekerSession();
+  if (!seeker) return { success: false, error: "Ikke innlogget." };
+
+  try {
+    JSON.parse(cvParsedJson);
+  } catch {
+    return { success: false, error: "Ugyldig format." };
+  }
+
+  await prisma.jobSeeker.update({
+    where: { id: seeker.id },
+    data: { cvParsed: cvParsedJson },
+  });
+
+  return { success: true };
+}
+
 export async function updateJobAlert(
   alertId: string,
   _prev: ActionState,
