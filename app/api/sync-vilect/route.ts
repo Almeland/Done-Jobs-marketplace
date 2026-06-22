@@ -74,7 +74,7 @@ export async function GET(req: Request) {
     const dept = depts?.[0] ?? {};
 
     const vilectDepartmentId = String(dept["@_id"] ?? `dept-${vilectId}`);
-    const companyName = (dept.Name as string) || "Ukjent bedrift";
+    const companyName = dept.Name != null ? String(dept.Name) : "Ukjent bedrift";
 
     if (!accountMap.has(vilectDepartmentId)) {
       if (!newAccounts.find((a) => a.vilectDepartmentId === vilectDepartmentId)) {
