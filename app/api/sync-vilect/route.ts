@@ -14,6 +14,7 @@ function parseDeadline(raw: string | null): Date | null {
 }
 
 export async function GET(req: Request) {
+  try {
   const secret = process.env.CRON_SECRET;
   if (secret) {
     const auth = req.headers.get("authorization");
@@ -179,4 +180,9 @@ export async function GET(req: Request) {
   }
 
   return Response.json({ added, updated, deactivated, total: activeVilectIds.size });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[sync-vilect]", msg);
+    return Response.json({ error: msg }, { status: 500 });
+  }
 }
