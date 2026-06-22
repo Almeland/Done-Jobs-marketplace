@@ -147,23 +147,29 @@ export async function GET(req: Request) {
 
   // Batch updates via transaction
   if (toUpdate.length > 0) {
-    await prisma.$transaction(
-      toUpdate.map((l) =>
-        prisma.jobListing.update({
-          where: { vilectId: l.vilectId },
-          data: {
-            title: l.title,
-            body: l.body,
-            location: l.location,
-            applicationDeadline: l.applicationDeadline,
-            expiresAt: l.expiresAt,
-            status: "ACTIVE",
-            accountId: accountMap.get(l.accountDeptId)!.id,
-            publishedAt: l.publishedAt,
-          },
-        })
-      )
-    );
+    // Chunk into batches of 30 to stay within transaction timeout
+    const CHUNK = 30;
+    for (let i = 0; i < toUpdate.length; i += CHUNK) {
+      const chunk = toUpdate.slice(i, i + CHUNK);
+      await prisma.$transaction(
+        chunk.map((l) =>
+          prisma.jobListing.update({
+            where: { vilectId: l.vilectId },
+            data: {
+              title: l.title,
+              body: l.body,
+              location: l.location,
+              applicationDeadline: l.applicationDeadline,
+              expiresAt: l.expiresAt,
+              status: "ACTIVE",
+              accountId: accountMap.get(l.accountDeptId)!.id,
+              publishedAt: l.publishedAt,
+            },
+          })
+        ),
+        { timeout: 20000 }
+      );
+    }
     updated = toUpdate.length;
   }
 
