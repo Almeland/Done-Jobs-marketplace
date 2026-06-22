@@ -53,3 +53,26 @@ export async function getJobSeekerSession() {
   if (!id) return null;
   return prisma.jobSeeker.findUnique({ where: { id } });
 }
+
+const ADMIN_COOKIE = "admin_session";
+
+export async function createAdminSession() {
+  const cookieStore = await cookies();
+  cookieStore.set(ADMIN_COOKIE, "1", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: MAX_AGE,
+    path: "/",
+  });
+}
+
+export async function clearAdminSession() {
+  const cookieStore = await cookies();
+  cookieStore.delete(ADMIN_COOKIE);
+}
+
+export async function getAdminSession() {
+  const cookieStore = await cookies();
+  return cookieStore.get(ADMIN_COOKIE)?.value === "1";
+}
