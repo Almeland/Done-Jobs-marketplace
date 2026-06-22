@@ -140,7 +140,6 @@ export async function GET(req: Request) {
         publishedAt: l.publishedAt,
         firstPublishedAt: l.publishedAt,
       })),
-      skipDuplicates: true,
     });
     added = toCreate.length;
   }
