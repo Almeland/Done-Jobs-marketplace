@@ -16,6 +16,22 @@ export type MatchResult = {
   mangler: string[];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function preFilter(listings: any[], cvParsed: string, limit = 10): any[] {
+  const cv = cvParsed.toLowerCase();
+  const words = cv.match(/\b\w{4,}\b/g) ?? [];
+  const scored = listings.map((l) => {
+    const haystack = [l.title, l.industry, l.jobCategory, l.location, l.body, l.account.companyName]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    const hits = words.filter((w: string) => haystack.includes(w)).length;
+    return { listing: l, hits };
+  });
+  scored.sort((a, b) => b.hits - a.hits);
+  return scored.slice(0, limit).map((s) => s.listing);
+}
+
 export async function POST() {
   const jobSeeker = await getJobSeekerSession();
   if (!jobSeeker) return new Response("Uautorisert", { status: 401 });
@@ -25,16 +41,17 @@ export async function POST() {
     return new Response(JSON.stringify({ error: "Last opp CV først." }), { status: 400 });
   }
 
-  const listings = await prisma.jobListing.findMany({
+  const allListings = await prisma.jobListing.findMany({
     where: { status: "ACTIVE" },
     include: { account: { select: { companyName: true } } },
     orderBy: { publishedAt: "desc" },
-    take: 30,
   });
 
-  if (listings.length === 0) {
+  if (allListings.length === 0) {
     return new Response(JSON.stringify([]), { headers: { "Content-Type": "application/json" } });
   }
+
+  const listings = preFilter(allListings, seeker.cvParsed, 10);
 
   const stillingerTekst = listings
     .map((l, i) =>
@@ -50,7 +67,7 @@ ${seeker.cvParsed}
 AKTIVE STILLINGER (ID | Tittel | Bedrift | Sted | Bransje | Kategori):
 ${stillingerTekst}
 
-Returner KUN gyldig JSON-array (ingen markdown). Inkluder kun stillinger med score ≥ 40. Sorter etter score synkende. Maks 10 resultater.
+Returner KUN gyldig JSON-array (ingen markdown). Inkluder kun stillinger med score ≥ 40. Sorter etter score synkende. Maks 8 resultater.
 
 [{"listingId":"exact id","score":85,"tittel":"...","bedrift":"...","forklaring":"2-3 setninger på norsk","styrker":["styrke 1","styrke 2"],"mangler":["gap 1"]}]`;
 

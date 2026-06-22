@@ -79,7 +79,7 @@ export async function GET(req: Request) {
     const expiresAt = dateEnd ? new Date(dateEnd) : null;
     const publishedAt = dateStart ? new Date(dateStart) : new Date();
 
-    const existing = await prisma.jobListing.findFirst({ where: { vilectId } });
+    const existing = await prisma.jobListing.findUnique({ where: { vilectId } });
 
     if (existing) {
       await prisma.jobListing.update({

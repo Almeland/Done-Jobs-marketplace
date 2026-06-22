@@ -80,7 +80,7 @@ model JobListing {
   salaryMax  Int?
   salaryType String?
 
-  vilectId   String?
+  vilectId   String? @unique
   source     String?
 
   receiptMethod String?
