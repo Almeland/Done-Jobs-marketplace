@@ -36,7 +36,31 @@ export async function GET(req: Request) {
   const data = parser.parse(xml);
   const vacancies: unknown[] = data?.VacancyList?.Vacancy ?? [];
 
-  let added = 0, updated = 0, deactivated = 0;
+  // --- Steg 1: Hent alle eksisterende Vilect-kontoer og stillinger i én query ---
+  const [existingAccounts, existingListings] = await Promise.all([
+    prisma.account.findMany({
+      where: { vilectDepartmentId: { not: null } },
+      select: { id: true, vilectDepartmentId: true, companyName: true },
+    }),
+    prisma.jobListing.findMany({
+      where: { source: "vilect" },
+      select: { id: true, vilectId: true, accountId: true },
+    }),
+  ]);
+
+  const accountMap = new Map(existingAccounts.map((a) => [a.vilectDepartmentId!, a]));
+  const listingMap = new Map(existingListings.map((l) => [l.vilectId!, l]));
+
+  // --- Steg 2: Parse XML og bygg opp lister for creates/updates ---
+  type AccountCreate = { companyName: string; vilectDepartmentId: string };
+  type ListingData = {
+    vilectId: string; accountDeptId: string; title: string | null; body: string | null;
+    location: string | null; applicationDeadline: Date | null; expiresAt: Date | null;
+    publishedAt: Date; receiptUrl: string | null;
+  };
+
+  const newAccounts: AccountCreate[] = [];
+  const listingsToProcess: ListingData[] = [];
   const activeVilectIds = new Set<string>();
 
   for (const v of vacancies as Record<string, unknown>[]) {
@@ -45,27 +69,23 @@ export async function GET(req: Request) {
 
     const versions = (v.Versions as Record<string, unknown>)?.Version as Record<string, unknown>[];
     const version = versions?.find((ver) => ver["@_language"] === "no") ?? versions?.[0] ?? {};
-
     const depts = (v.Departments as Record<string, unknown>)?.Department as Record<string, unknown>[];
     const dept = depts?.[0] ?? {};
 
     const vilectDepartmentId = String(dept["@_id"] ?? `dept-${vilectId}`);
     const companyName = (dept.Name as string) || "Ukjent bedrift";
-    const vacancyUrl = (dept.VacancyURL as string) || null;
 
-    // Upsert ett selskap per department
-    const account = await prisma.account.upsert({
-      where: { vilectDepartmentId },
-      create: { companyName, vilectDepartmentId },
-      update: { companyName },
-    });
+    if (!accountMap.has(vilectDepartmentId)) {
+      if (!newAccounts.find((a) => a.vilectDepartmentId === vilectDepartmentId)) {
+        newAccounts.push({ companyName, vilectDepartmentId });
+      }
+    }
 
     const title = (version.Title as string) || null;
     const heading = (version.TitleHeading as string) || null;
     const engagement = (version.Engagement as string) || null;
     const county = ((version.Region as Record<string, unknown>)?.Country as Record<string, unknown>)?.County as string;
-    const locationParts = [version.Location as string, county].filter(Boolean);
-    const location = locationParts.join(", ") || null;
+    const location = [version.Location as string, county].filter(Boolean).join(", ") || null;
     const deadlineRaw = (version.ApplicationDeadline as string) || null;
     const dateEnd = v["@_date_end"] as string | null;
     const dateStart = v["@_date_start"] as string | null;
@@ -73,54 +93,90 @@ export async function GET(req: Request) {
     const bodyParts: string[] = [];
     if (heading) bodyParts.push(`<p><strong>${heading}</strong></p>`);
     if (engagement) bodyParts.push(`<p>Stillingstype: ${engagement}</p>`);
-    const body = bodyParts.join("\n") || null;
 
-    const applicationDeadline = parseDeadline(deadlineRaw);
-    const expiresAt = dateEnd ? new Date(dateEnd) : null;
-    const publishedAt = dateStart ? new Date(dateStart) : new Date();
-
-    const existing = await prisma.jobListing.findUnique({ where: { vilectId } });
-
-    if (existing) {
-      await prisma.jobListing.update({
-        where: { id: existing.id },
-        data: { title, body, location, applicationDeadline, expiresAt, status: "ACTIVE", accountId: account.id, publishedAt, firstPublishedAt: publishedAt },
-      });
-      updated++;
-    } else {
-      await prisma.jobListing.create({
-        data: {
-          accountId: account.id,
-          createdById: SYSTEM_USER_ID,
-          vilectId,
-          source: "vilect",
-          title,
-          body,
-          location,
-          applicationDeadline,
-          expiresAt,
-          receiptMethod: "EXTERNAL_URL",
-          receiptUrl: vacancyUrl,
-          status: "ACTIVE",
-          publishedAt,
-          firstPublishedAt: publishedAt,
-        },
-      });
-      added++;
-    }
+    listingsToProcess.push({
+      vilectId,
+      accountDeptId: vilectDepartmentId,
+      title,
+      body: bodyParts.join("\n") || null,
+      location,
+      applicationDeadline: parseDeadline(deadlineRaw),
+      expiresAt: dateEnd ? new Date(dateEnd) : null,
+      publishedAt: dateStart ? new Date(dateStart) : new Date(),
+      receiptUrl: (dept.VacancyURL as string) || null,
+    });
   }
 
-  // Deaktiver stillinger som ikke lenger er i feeden
-  const toCheck = await prisma.jobListing.findMany({
-    where: { source: "vilect", status: "ACTIVE" },
-    select: { id: true, vilectId: true },
-  });
+  // --- Steg 3: Opprett manglende kontoer sekvensielt (få unike selskaper) ---
+  for (const acc of newAccounts) {
+    const created = await prisma.account.create({
+      data: { companyName: acc.companyName, vilectDepartmentId: acc.vilectDepartmentId },
+    });
+    accountMap.set(acc.vilectDepartmentId, { id: created.id, vilectDepartmentId: acc.vilectDepartmentId, companyName: acc.companyName });
+  }
 
-  for (const l of toCheck) {
-    if (l.vilectId && !activeVilectIds.has(l.vilectId)) {
-      await prisma.jobListing.update({ where: { id: l.id }, data: { status: "EXPIRED" } });
-      deactivated++;
-    }
+  // --- Steg 4: Batch creates og updates for stillinger ---
+  const toCreate = listingsToProcess.filter((l) => !listingMap.has(l.vilectId));
+  const toUpdate = listingsToProcess.filter((l) => listingMap.has(l.vilectId));
+
+  let added = 0, updated = 0, deactivated = 0;
+
+  // Batch create
+  if (toCreate.length > 0) {
+    await prisma.jobListing.createMany({
+      data: toCreate.map((l) => ({
+        accountId: accountMap.get(l.accountDeptId)!.id,
+        createdById: SYSTEM_USER_ID,
+        vilectId: l.vilectId,
+        source: "vilect",
+        title: l.title,
+        body: l.body,
+        location: l.location,
+        applicationDeadline: l.applicationDeadline,
+        expiresAt: l.expiresAt,
+        receiptMethod: "EXTERNAL_URL",
+        receiptUrl: l.receiptUrl,
+        status: "ACTIVE",
+        publishedAt: l.publishedAt,
+        firstPublishedAt: l.publishedAt,
+      })),
+      skipDuplicates: true,
+    });
+    added = toCreate.length;
+  }
+
+  // Batch updates via transaction
+  if (toUpdate.length > 0) {
+    await prisma.$transaction(
+      toUpdate.map((l) =>
+        prisma.jobListing.update({
+          where: { vilectId: l.vilectId },
+          data: {
+            title: l.title,
+            body: l.body,
+            location: l.location,
+            applicationDeadline: l.applicationDeadline,
+            expiresAt: l.expiresAt,
+            status: "ACTIVE",
+            accountId: accountMap.get(l.accountDeptId)!.id,
+            publishedAt: l.publishedAt,
+          },
+        })
+      )
+    );
+    updated = toUpdate.length;
+  }
+
+  // Deaktiver utgåtte
+  const toDeactivate = existingListings.filter(
+    (l) => l.vilectId && !activeVilectIds.has(l.vilectId)
+  );
+  if (toDeactivate.length > 0) {
+    await prisma.jobListing.updateMany({
+      where: { id: { in: toDeactivate.map((l) => l.id) } },
+      data: { status: "EXPIRED" },
+    });
+    deactivated = toDeactivate.length;
   }
 
   return Response.json({ added, updated, deactivated, total: activeVilectIds.size });
