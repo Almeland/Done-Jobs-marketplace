@@ -7,10 +7,14 @@ import { fetchEnhet, fetchRegnskap } from "@/lib/brreg";
 
 export default async function BedriftProfilPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string>>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
+  const fraListingId = sp.fra ?? null;
   const jobSeeker = await getJobSeekerSession();
 
   const [account, isFollowing] = await Promise.all([
@@ -52,9 +56,15 @@ export default async function BedriftProfilPage({
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-14">
-      <Link href="/bedrifter" className="text-sm text-midnight/50 hover:text-midnight mb-8 inline-block">
-        ← Alle bedrifter
-      </Link>
+      {fraListingId ? (
+        <Link href={`/stillinger/${fraListingId}`} className="text-sm text-midnight/50 hover:text-midnight mb-8 inline-block">
+          ← Tilbake til stillingen
+        </Link>
+      ) : (
+        <Link href="/bedrifter" className="text-sm text-midnight/50 hover:text-midnight mb-8 inline-block">
+          ← Alle bedrifter
+        </Link>
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-6 mb-10">

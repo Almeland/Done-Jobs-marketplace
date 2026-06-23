@@ -124,9 +124,35 @@ export default async function StillingDetaljPage({
         </div>
       )}
 
-      {/* Følg bedriften */}
+      {/* Bedriftskort */}
       <div className="mt-10 border-t border-platinum pt-8">
-        <FolgBedrift accountId={listing.accountId} companyName={listing.account.companyName} />
+        <p className="text-xs font-semibold text-midnight/40 uppercase tracking-widest mb-4">Om bedriften</p>
+        <Link
+          href={`/bedrifter/${listing.accountId}?fra=${listing.id}`}
+          className="group flex items-start gap-4 bg-white border border-platinum rounded-2xl p-5 hover:border-violet/30 hover:shadow-sm transition-all"
+        >
+          {(listing.account.logoUrl) ? (
+            <img src={listing.account.logoUrl} alt={listing.account.companyName} className="w-12 h-12 rounded-xl object-contain flex-shrink-0 mt-0.5" />
+          ) : (
+            <div className="w-12 h-12 rounded-xl bg-lavender flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-violet font-bold text-lg">{listing.account.companyName[0]}</span>
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-[15px] font-semibold text-midnight group-hover:text-violet transition-colors">
+              {listing.account.companyName}
+            </p>
+            {listing.account.description && (
+              <p className="text-sm text-midnight/50 mt-1 line-clamp-2 leading-relaxed">
+                {listing.account.description}
+              </p>
+            )}
+            <p className="text-xs text-violet mt-2 font-medium">Se bedriftsprofil →</p>
+          </div>
+        </Link>
+        <div className="mt-4">
+          <FolgBedrift accountId={listing.accountId} companyName={listing.account.companyName} />
+        </div>
       </div>
 
       {/* Kontaktperson */}
