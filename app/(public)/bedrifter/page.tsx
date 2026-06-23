@@ -2,11 +2,21 @@ import { prisma } from "@/lib/prisma";
 import { getJobSeekerSession } from "@/lib/session";
 import Link from "next/link";
 import FolgKnapp from "./FolgKnapp";
+import BedriftSøk from "./BedriftSøk";
 
-export default async function BedrifterPage() {
+export default async function BedrifterPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string>>;
+}) {
+  const sp = await searchParams;
+  const q = sp.q ?? "";
   const jobSeeker = await getJobSeekerSession();
 
   const accounts = await prisma.account.findMany({
+    where: q
+      ? { companyName: { contains: q } }
+      : undefined,
     include: {
       _count: {
         select: {
@@ -30,9 +40,11 @@ export default async function BedrifterPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-14">
       <h1 className="text-[32px] font-semibold text-midnight mb-2 tracking-tight">Bedrifter</h1>
-      <p className="text-[16px] text-midnight/50 mb-10">
-        {accounts.length} bedrift{accounts.length !== 1 ? "er" : ""} med profil på Done Jobs
+      <p className="text-[16px] text-midnight/50 mb-6">
+        {accounts.length} bedrift{accounts.length !== 1 ? "er" : ""}{q ? ` for «${q}»` : " med profil på Done Jobs"}
       </p>
+
+      <BedriftSøk q={q} />
 
       <ul className="space-y-3">
         {accounts.map((a) => {

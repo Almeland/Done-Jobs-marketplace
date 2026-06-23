@@ -48,6 +48,8 @@ export default async function BedriftProfilPage({
     ? await Promise.all([fetchEnhet(account.orgNumber), fetchRegnskap(account.orgNumber)])
     : [null, []];
 
+  const website = account.website ?? brregEnhet?.hjemmeside ?? null;
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-14">
       <Link href="/bedrifter" className="text-sm text-midnight/50 hover:text-midnight mb-8 inline-block">
@@ -81,9 +83,9 @@ export default async function BedriftProfilPage({
               <span>{account._count.followers} følger{account._count.followers !== 1 ? "e" : ""}</span>
               {account.employeeCount && <span>👥 {account.employeeCount} ansatte</span>}
               {account.foundedYear && <span>📅 Est. {account.foundedYear}</span>}
-              {account.website && (
-                <a href={account.website} target="_blank" rel="noopener noreferrer" className="text-violet hover:text-violet/70">
-                  {account.website.replace(/^https?:\/\//, "")}
+              {website && (
+                <a href={website} target="_blank" rel="noopener noreferrer" className="text-violet hover:text-violet/70">
+                  {website.replace(/^https?:\/\//, "")}
                 </a>
               )}
             </div>
