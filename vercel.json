@@ -7,6 +7,10 @@
     {
       "path": "/api/sync-nav",
       "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/nav-cleanup",
+      "schedule": "0 3 * * *"
     }
   ]
 }

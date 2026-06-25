@@ -112,11 +112,6 @@ export default async function StillingerPage({
                     <h2 className="text-[17px] font-semibold text-midnight group-hover:text-violet transition-colors">
                       {l.title}
                     </h2>
-                    {l.source === "nav" && (
-                      <span className="inline-block text-[10px] font-medium text-midnight/40 border border-midnight/15 rounded px-1.5 py-0.5 mt-1">
-                        Kilde: NAV
-                      </span>
-                    )}
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
                       {l.location && (
                         <span className="text-xs text-midnight/50 flex items-center gap-1">

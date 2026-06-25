@@ -88,11 +88,6 @@ export default async function StillingDetaljPage({
         <h1 className="text-[36px] font-semibold text-midnight leading-tight tracking-tight mb-3">
           {listing.title}
         </h1>
-        {listing.source === "nav" && (
-          <span className="inline-block text-[11px] font-medium text-midnight/40 border border-midnight/15 rounded px-2 py-0.5 mb-3">
-            Kilde: NAV
-          </span>
-        )}
         <div className="flex flex-wrap items-center gap-2">
           {listing.location && (
             <span className="inline-flex items-center gap-1 text-sm font-medium text-midnight/60">
