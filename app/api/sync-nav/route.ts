@@ -65,14 +65,18 @@ type ListingDetail = {
   engagementtype?: string;
 };
 
+function extractJwt(raw: string): string {
+  const match = raw.match(/eyJ[\w-]+\.[\w-]+\.[\w-]+/);
+  return match ? match[0] : raw.trim();
+}
+
 async function getToken(): Promise<string> {
   const stored = process.env.NAV_API_TOKEN;
-  if (stored) return stored;
-  // Fall back to public token
+  if (stored) return extractJwt(stored);
   const res = await fetch(`${FEED_BASE}/api/publicToken`, { cache: "no-store" });
   if (!res.ok) throw new Error("Kunne ikke hente offentlig NAV-token");
   const text = await res.text();
-  return text.trim().replace(/^"|"$/g, "");
+  return extractJwt(text);
 }
 
 async function fetchFeedPage(url: string, token: string): Promise<FeedPage> {
