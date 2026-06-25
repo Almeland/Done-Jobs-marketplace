@@ -7,6 +7,7 @@ const MAX_PAGES_PER_RUN = 30;
 const MAX_NEW_FETCHES = 100;
 const DETAIL_BATCH = 10;
 const NAV_SYSTEM_EMAIL = "nav-sync@done-jobs.internal";
+const CURSOR_VILECT_ID = "nav:__cursor__";
 
 async function ensureSystemUser(): Promise<string> {
   const existing = await prisma.user.findUnique({
@@ -28,6 +29,47 @@ async function ensureSystemUser(): Promise<string> {
     },
   });
   return user.id;
+}
+
+// Cursor lagres som en spesiell JobListing med vilectId = CURSOR_VILECT_ID
+// receiptUrl brukes som cursor-verdi (siste next_url)
+async function readCursor(): Promise<string | null> {
+  const rec = await prisma.jobListing.findUnique({
+    where: { vilectId: CURSOR_VILECT_ID },
+    select: { receiptUrl: true },
+  });
+  return rec?.receiptUrl ?? null;
+}
+
+async function writeCursor(nextUrl: string | null, systemUserId: string): Promise<void> {
+  if (!nextUrl) return; // feed ferdig — ikke overskrive
+  const existing = await prisma.jobListing.findUnique({
+    where: { vilectId: CURSOR_VILECT_ID },
+  });
+  if (existing) {
+    await prisma.jobListing.update({
+      where: { vilectId: CURSOR_VILECT_ID },
+      data: { receiptUrl: nextUrl },
+    });
+  } else {
+    // Finn system-accountId
+    const user = await prisma.user.findUnique({
+      where: { email: NAV_SYSTEM_EMAIL },
+      select: { accountId: true },
+    });
+    if (!user) return;
+    await prisma.jobListing.create({
+      data: {
+        vilectId: CURSOR_VILECT_ID,
+        accountId: user.accountId,
+        createdById: systemUserId,
+        source: "nav",
+        title: "__cursor__",
+        status: "DRAFT",
+        receiptUrl: nextUrl,
+      },
+    });
+  }
 }
 
 type FeedItem = {
@@ -127,19 +169,27 @@ export async function GET(req: Request) {
 
     const [token, systemUserId] = await Promise.all([getToken(), ensureSystemUser()]);
 
-    // --- Paginer gjennom hele feedet og samle alle items ---
-    const allItems: FeedItem[] = [];
-    let nextUrl: string | null = `${FEED_BASE}/api/v1/feed`;
+    // --- Les lagret cursor (fortsett der vi slapp) ---
+    const savedCursor = await readCursor();
+    let nextUrl: string | null = savedCursor ?? `${FEED_BASE}/api/v1/feed`;
 
+    // --- Paginer 30 sider fra cursor-posisjon ---
+    const allItems: FeedItem[] = [];
     let pagesRead = 0;
+    let lastNextUrl: string | null = nextUrl;
+
     while (nextUrl && pagesRead < MAX_PAGES_PER_RUN) {
       const page = await fetchFeedPage(nextUrl, token);
       allItems.push(...page.items);
+      lastNextUrl = nextUrl;
       nextUrl = page.next_url;
       pagesRead++;
     }
 
-    // --- Last eksisterende data fra DB ---
+    // Lagre cursor (neste side å starte på)
+    await writeCursor(nextUrl, systemUserId);
+
+    // --- Last eksisterende NAV-stillinger fra DB ---
     const [existingListings, existingAccountsByOrgnr, existingAccountsByName] =
       await Promise.all([
         prisma.jobListing.findMany({
@@ -161,18 +211,18 @@ export async function GET(req: Request) {
     const accountByName = new Map(existingAccountsByName.map((a) => [a.companyName.toLowerCase(), a.id]));
 
     // --- Del inn i aktive og inaktive ---
-    const activeItems = allItems.filter((i) => i._feed_entry.status === "ACTIVE");
+    const activeItems = allItems.filter((i) => i._feed_entry?.status === "ACTIVE");
     const inactiveUuids = new Set(
       allItems
-        .filter((i) => i._feed_entry.status === "INACTIVE")
+        .filter((i) => i._feed_entry?.status === "INACTIVE")
         .map((i) => `nav:${i._feed_entry.uuid}`)
     );
-
     const activeNavKeys = new Set(activeItems.map((i) => `nav:${i._feed_entry.uuid}`));
 
-    // --- Deaktiver utgåtte (inaktive + ikke lenger i feed) ---
+    // --- Deaktiver utgåtte ---
     const toDeactivate = existingListings.filter(
-      (l) => l.vilectId && (inactiveUuids.has(l.vilectId) || !activeNavKeys.has(l.vilectId))
+      (l) => l.vilectId && l.vilectId !== CURSOR_VILECT_ID &&
+        (inactiveUuids.has(l.vilectId) || (!activeNavKeys.has(l.vilectId) && nextUrl === null))
     );
     if (toDeactivate.length > 0) {
       await prisma.jobListing.updateMany({
@@ -181,13 +231,11 @@ export async function GET(req: Request) {
       });
     }
 
-    // --- Finn nye stillinger som trenger full henting ---
+    // --- Nye aktive stillinger ---
     const newItems = activeItems.filter((i) => !listingMap.has(`nav:${i._feed_entry.uuid}`));
     const toFetch = newItems.slice(0, MAX_NEW_FETCHES);
-
     let added = 0;
 
-    // Fetch details in parallel batches to stay within timeout
     for (let i = 0; i < toFetch.length; i += DETAIL_BATCH) {
       const batch = toFetch.slice(i, i + DETAIL_BATCH);
       const details = await Promise.all(batch.map((item) => fetchDetail(item.url, token)));
@@ -201,7 +249,6 @@ export async function GET(req: Request) {
         const companyName = detail?.employer?.name ?? entry.businessName ?? "Ukjent bedrift";
         const orgnr = detail?.employer?.orgnr?.replace(/\s/g, "") ?? null;
 
-        // Finn eller opprett account
         let accountId: string;
         if (orgnr && accountByOrgnr.has(orgnr)) {
           accountId = accountByOrgnr.get(orgnr)!;
@@ -261,8 +308,11 @@ export async function GET(req: Request) {
     }
 
     return Response.json({
-      total_in_feed: allItems.length,
-      active: activeItems.length,
+      cursor_was: savedCursor ? "stored" : "beginning",
+      pages_read: pagesRead,
+      feed_done: nextUrl === null,
+      total_in_batch: allItems.length,
+      active_in_batch: activeItems.length,
       added,
       deactivated: toDeactivate.length,
       skipped_new: newItems.length - toFetch.length,
