@@ -79,8 +79,12 @@ async function getToken(): Promise<string> {
   return extractJwt(text);
 }
 
+function toAbsolute(url: string): string {
+  return url.startsWith("http") ? url : `${FEED_BASE}${url}`;
+}
+
 async function fetchFeedPage(url: string, token: string): Promise<FeedPage> {
-  const res = await fetch(url, {
+  const res = await fetch(toAbsolute(url), {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
@@ -89,9 +93,8 @@ async function fetchFeedPage(url: string, token: string): Promise<FeedPage> {
 }
 
 async function fetchDetail(url: string, token: string): Promise<ListingDetail | null> {
-  const fullUrl = url.startsWith("http") ? url : `${FEED_BASE}${url}`;
   try {
-    const res = await fetch(fullUrl, {
+    const res = await fetch(toAbsolute(url), {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
