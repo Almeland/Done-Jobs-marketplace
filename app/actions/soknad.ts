@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getJobSeekerSession } from "@/lib/session";
 import { put } from "@vercel/blob";
+import { sendSoknadTilArbeidsgiver, sendBekreftelseTilSoker } from "@/lib/email";
 
 type ActionState = { error: string } | null;
 
@@ -53,17 +54,38 @@ export async function sendSoknad(
     },
   });
 
-  // Stub: deliver to receipt method
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://done-jobs-marketplace.vercel.app";
+  const listingUrl = `${base}/stillinger/${listingId}`;
+
+  const emailPromises: Promise<unknown>[] = [];
+
   if (listing.receiptMethod === "EMAIL" && listing.receiptEmail) {
-    console.log(
-      `[e-post stub] Ny søknad på «${listing.title}» fra ${applicantName} <${applicantEmail}> → videresendt til ${listing.receiptEmail}`
+    emailPromises.push(
+      sendSoknadTilArbeidsgiver({
+        listingTitle: listing.title ?? "Stilling",
+        companyName: listing.account.companyName,
+        applicantName,
+        applicantEmail,
+        applicantPhone,
+        coverText,
+        cvFileUrl,
+        listingUrl: `${base}/arbeidsgiver/annonser/${listingId}`,
+        receiptEmail: listing.receiptEmail,
+      }).catch((err) => console.error("[e-post feil] arbeidsgiver:", err))
     );
   }
 
-  // Stub: confirmation to applicant
-  console.log(
-    `[e-post stub] Søknadsbekreftelse sendt til ${applicantEmail}`
+  emailPromises.push(
+    sendBekreftelseTilSoker({
+      listingTitle: listing.title ?? "Stilling",
+      companyName: listing.account.companyName,
+      applicantName,
+      applicantEmail,
+      listingUrl,
+    }).catch((err) => console.error("[e-post feil] søker:", err))
   );
+
+  await Promise.all(emailPromises);
 
   redirect(`/stillinger/${listingId}/soknad/bekreftet`);
 }

@@ -154,7 +154,7 @@ export default function MinProfilKlient({ initialCvText, initialCvParsed }: Prop
     <div className="space-y-8">
       {/* CV-input */}
       <div className="bg-white border border-platinum rounded-2xl p-6 space-y-5">
-        <h2 className="text-sm font-semibold text-midnight/60 uppercase tracking-widest">Din CV</h2>
+        <h2 className="text-sm font-semibold text-midnight/80 uppercase tracking-widest">Din CV</h2>
 
         <div>
           <label className="block text-sm font-medium text-midnight/60 mb-2">Last opp CV (PDF)</label>
@@ -165,6 +165,11 @@ export default function MinProfilKlient({ initialCvText, initialCvParsed }: Prop
             className="block w-full text-sm text-midnight/60 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-lavender file:text-violet hover:file:bg-lavender/80 cursor-pointer"
           />
           {file && <p className="text-xs text-emerald-brand mt-1.5">✓ {file.name}</p>}
+          <p className="text-xs text-midnight/40 mt-2">
+            Har du ikke CV liggende?{" "}
+            <span className="text-midnight/60 font-medium">Last ned LinkedIn-profilen din som PDF:</span>{" "}
+            logg inn på LinkedIn → Profil → Mer → Lagre som PDF, og last den opp her.
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -195,7 +200,7 @@ export default function MinProfilKlient({ initialCvText, initialCvParsed }: Prop
           type="button"
           onClick={parseCV}
           disabled={parsing}
-          className="bg-violet text-pearl rounded-full px-6 py-2.5 text-sm font-medium hover:bg-violet/90 disabled:opacity-50 transition-colors"
+          className="bg-violet-drift-btn text-white rounded-full px-6 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-colors"
         >
           {parsing ? "Analyserer CV…" : "Analyser CV"}
         </button>
@@ -205,7 +210,7 @@ export default function MinProfilKlient({ initialCvText, initialCvParsed }: Prop
       {editedParsed && (
         <div className="bg-white border border-platinum rounded-2xl p-6 space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-midnight/60 uppercase tracking-widest">Kompetanseprofil</h2>
+            <h2 className="text-sm font-semibold text-midnight/80 uppercase tracking-widest">Kompetanseprofil</h2>
             <span className="text-xs text-emerald-brand font-medium">✓ Analysert</span>
           </div>
 
@@ -299,7 +304,7 @@ export default function MinProfilKlient({ initialCvText, initialCvParsed }: Prop
       {/* Matchresultater */}
       {matches !== null && (
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-midnight/60 uppercase tracking-widest">
+          <h2 className="text-sm font-semibold text-midnight/80 uppercase tracking-widest">
             {matches.length === 0
               ? "Ingen stillinger over 40% match akkurat nå"
               : `${matches.length} matchende stilling${matches.length !== 1 ? "er" : ""}`}
@@ -348,7 +353,7 @@ export default function MinProfilKlient({ initialCvText, initialCvParsed }: Prop
                 <div className="flex items-center justify-between gap-3 pt-1">
                   <Link
                     href={`/stillinger/${m.listingId}`}
-                    className="inline-block bg-violet text-pearl rounded-full px-5 py-2 text-sm font-medium hover:bg-violet/90 transition-colors"
+                    className="inline-block bg-violet-drift-btn text-white rounded-full px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors"
                   >
                     Se stillingen →
                   </Link>

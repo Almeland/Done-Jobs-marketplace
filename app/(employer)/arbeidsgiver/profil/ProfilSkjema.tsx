@@ -141,7 +141,7 @@ export default function ProfilSkjema({ account }: { account: Account }) {
                 onClick={() => toggle(culture, setCulture, tag)}
                 className={`text-sm px-3.5 py-1.5 rounded-full border transition-colors ${
                   active
-                    ? "bg-violet text-pearl border-violet"
+                    ? "bg-violet-drift-btn text-white border-violet"
                     : "bg-white text-midnight/60 border-platinum hover:border-violet/40"
                 }`}
               >

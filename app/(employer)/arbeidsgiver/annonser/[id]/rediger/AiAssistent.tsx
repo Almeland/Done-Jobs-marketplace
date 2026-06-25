@@ -115,7 +115,7 @@ export default function AiAssistent({
               <button
                 type="button"
                 onClick={generer}
-                className="bg-violet text-pearl rounded-full px-5 py-2.5 text-sm font-medium hover:bg-violet/90 transition-colors"
+                className="bg-violet-drift-btn text-white rounded-full px-5 py-2.5 text-sm font-medium hover:opacity-90 transition-colors"
               >
                 {preview ? "Regenerer" : "Generer annonsetekst"}
               </button>

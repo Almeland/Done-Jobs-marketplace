@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getJobSeekerSession } from "@/lib/session";
 import Link from "next/link";
 import FolgKnapp from "./FolgKnapp";
 import BedriftSøk from "./BedriftSøk";
+
+export const metadata: Metadata = {
+  title: "Bedrifter",
+  description:
+    "Utforsk norske bedrifter med profil på Done Jobs. Se aktive stillinger, firmadata og følg bedrifter du er interessert i.",
+};
 
 export default async function BedrifterPage({
   searchParams,

@@ -101,7 +101,7 @@ export default function StatusPanel({ listing }: { listing: JobListing }) {
           <button
             type="submit"
             disabled={publiserPending}
-            className="w-full bg-violet text-pearl rounded-full py-2.5 text-sm font-medium hover:bg-violet/90 disabled:opacity-50 transition-colors"
+            className="w-full bg-violet-drift-btn text-white rounded-full py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-colors"
           >
             {publiserPending ? "Publiserer…" : "Publiser annonse"}
           </button>

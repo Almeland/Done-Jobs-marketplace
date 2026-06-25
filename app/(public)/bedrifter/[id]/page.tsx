@@ -1,9 +1,42 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getJobSeekerSession } from "@/lib/session";
 import Link from "next/link";
 import FolgKnapp from "../FolgKnapp";
 import { fetchEnhet, fetchRegnskap } from "@/lib/brreg";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const account = await prisma.account.findUnique({
+    where: { id },
+    select: {
+      companyName: true,
+      description: true,
+      tagline: true,
+      _count: { select: { listings: { where: { status: "ACTIVE" } } } },
+    },
+  });
+  if (!account) return {};
+  const name = account.companyName;
+  const activeCount = account._count.listings;
+  const desc =
+    account.description ??
+    account.tagline ??
+    `Se bedriftsprofil, aktive stillinger og firmadata for ${name} på Done Jobs.`;
+  return {
+    title: name,
+    description: `${desc.slice(0, 140)}${activeCount > 0 ? ` ${activeCount} aktiv${activeCount !== 1 ? "e" : ""} stilling${activeCount !== 1 ? "er" : ""}.` : ""}`,
+    openGraph: {
+      title: `${name} — Bedriftsprofil`,
+      description: desc.slice(0, 200),
+    },
+  };
+}
 
 export default async function BedriftProfilPage({
   params,

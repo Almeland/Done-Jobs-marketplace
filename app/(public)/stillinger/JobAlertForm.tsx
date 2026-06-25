@@ -47,7 +47,7 @@ export default function JobAlertForm({ bransje, kategori, sted }: Props) {
         <button
           type="submit"
           disabled={pending}
-          className="bg-violet text-pearl rounded-full px-5 py-2 text-sm font-medium hover:bg-violet/90 disabled:opacity-50 transition-colors whitespace-nowrap"
+          className="bg-violet-drift-btn text-white rounded-full px-5 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-colors whitespace-nowrap"
         >
           {pending ? "Abonnerer…" : "Få varsel"}
         </button>

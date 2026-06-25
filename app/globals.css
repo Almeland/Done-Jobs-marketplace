@@ -18,6 +18,14 @@
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
+@utility bg-violet-drift {
+  background: linear-gradient(135deg, #692BDF 0%, #8B4DCA 50%, #FFAFCE 100%);
+}
+
+@utility bg-violet-drift-btn {
+  background: linear-gradient(135deg, #692BDF 0%, #8B4DCA 100%);
+}
+
 body {
   background-color: #FBFBFB;
   color: #0B0425;

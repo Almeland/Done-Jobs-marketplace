@@ -53,7 +53,7 @@ export default function FilterPanel({ bransje, kategori, sted, lonn, q, location
         />
         <button
           type="submit"
-          className="bg-violet text-pearl rounded-full px-5 py-2 text-sm font-medium hover:bg-violet/90 transition-colors"
+          className="bg-violet-drift-btn text-white rounded-full px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors"
         >
           Søk
         </button>

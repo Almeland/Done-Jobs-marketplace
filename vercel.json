@@ -3,6 +3,10 @@
     {
       "path": "/api/sync-vilect",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/sync-nav",
+      "schedule": "0 */4 * * *"
     }
   ]
 }

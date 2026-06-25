@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import SokKnapp from "./SokKnapp";
@@ -5,6 +6,29 @@ import ViewTracker from "./ViewTracker";
 import FolgBedrift from "./FolgBedrift";
 import Link from "next/link";
 import { formaterLonn } from "@/lib/listing-utils";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const listing = await prisma.jobListing.findUnique({
+    where: { id },
+    select: { title: true, location: true, industry: true, account: { select: { companyName: true } } },
+  });
+  if (!listing) return {};
+  const title = listing.title ?? "Stilling";
+  const parts = [listing.account.companyName, listing.location].filter(Boolean).join(" · ");
+  return {
+    title,
+    description: `${title} hos ${listing.account.companyName}${listing.location ? ` i ${listing.location}` : ""}. Søk på Done Jobs.`,
+    openGraph: {
+      title: `${title} — ${listing.account.companyName}`,
+      description: parts,
+    },
+  };
+}
 
 export default async function StillingDetaljPage({
   params,
@@ -49,11 +73,11 @@ export default async function StillingDetaljPage({
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-midnight group-hover:text-violet transition-colors truncate">
+          <p className="text-[15px] font-semibold text-midnight group-hover:text-violet transition-colors truncate">
             {listing.account.companyName}
           </p>
           {listing.account.description && (
-            <p className="text-xs text-midnight/40 mt-0.5 truncate">{listing.account.description}</p>
+            <p className="text-xs text-midnight/60 mt-0.5 truncate">{listing.account.description}</p>
           )}
         </div>
         <span className="text-xs text-violet font-medium flex-shrink-0">Se profil →</span>
@@ -66,7 +90,7 @@ export default async function StillingDetaljPage({
         </h1>
         <div className="flex flex-wrap items-center gap-2">
           {listing.location && (
-            <span className="inline-flex items-center gap-1 text-sm text-midnight/50">
+            <span className="inline-flex items-center gap-1 text-sm font-medium text-midnight/60">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />

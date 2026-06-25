@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import FilterPanel from "./FilterPanel";
 import JobAlertForm from "./JobAlertForm";
 import { formaterLonn } from "@/lib/listing-utils";
+
+export const metadata: Metadata = {
+  title: "Ledige stillinger",
+  description:
+    "Bla gjennom ledige stillinger fra norske bedrifter. Filtrer på bransje, sted og lønn.",
+};
 
 const SALARY_BRACKETS = [
   { label: "Under 500 000 kr/år", value: "u500", min: null, max: 499999 },
@@ -65,18 +72,20 @@ export default async function StillingerPage({
   const hasFilters = !!(bransje || kategori || sted || lonn || q);
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-14">
-      <h1 className="text-[32px] font-semibold text-midnight mb-2 tracking-tight">
-        Ledige stillinger
-      </h1>
-      <p className="text-[16px] text-midnight/50 mb-8">
-        {listings.length === 0 && hasFilters
-          ? "Ingen treff på valgte filtre."
-          : listings.length === 0
-          ? "Ingen aktive stillinger for øyeblikket."
-          : `${listings.length} stilling${listings.length !== 1 ? "er" : ""} utlyst`}
-      </p>
+    <>
+      {/* Hero */}
+      <div className="bg-violet-drift px-6 py-14 text-center overflow-hidden">
+        <h1 className="text-[26px] sm:text-[40px] font-semibold text-white tracking-tight leading-tight mb-3">
+          Finn din neste jobb
+        </h1>
+        <p className="text-white/75 text-[14px] sm:text-[17px] max-w-md mx-auto">
+          {listings.length > 0
+            ? `${listings.length} ledige stilling${listings.length !== 1 ? "er" : ""} — nye muligheter hver dag`
+            : "Nye stillinger publiseres daglig"}
+        </p>
+      </div>
 
+    <div className="mx-auto max-w-3xl px-6 py-10">
       <FilterPanel bransje={bransje} kategori={kategori} sted={sted} lonn={lonn} q={q} locations={locations} />
 
       <div className="mb-8">
@@ -99,8 +108,8 @@ export default async function StillingerPage({
                   className="group flex items-start justify-between gap-4 bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-midnight/40 mb-1">{l.account.companyName}</p>
-                    <h2 className="text-[16px] font-semibold text-midnight group-hover:text-violet transition-colors">
+                    <p className="text-sm font-medium text-midnight/60 mb-1">{l.account.companyName}</p>
+                    <h2 className="text-[17px] font-semibold text-midnight group-hover:text-violet transition-colors">
                       {l.title}
                     </h2>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
@@ -158,5 +167,6 @@ export default async function StillingerPage({
         </ul>
       )}
     </div>
+    </>
   );
 }
