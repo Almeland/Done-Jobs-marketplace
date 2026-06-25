@@ -88,6 +88,11 @@ export default async function StillingDetaljPage({
         <h1 className="text-[36px] font-semibold text-midnight leading-tight tracking-tight mb-3">
           {listing.title}
         </h1>
+        {listing.source === "nav" && (
+          <span className="inline-block text-[11px] font-medium text-midnight/40 border border-midnight/15 rounded px-2 py-0.5 mb-3">
+            Kilde: NAV
+          </span>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           {listing.location && (
             <span className="inline-flex items-center gap-1 text-sm font-medium text-midnight/60">
@@ -140,22 +145,6 @@ export default async function StillingDetaljPage({
         />
       ) : null}
 
-      {/* Ekstern lenke for Vilect-stillinger */}
-      {listing.receiptMethod === "EXTERNAL_URL" && listing.receiptUrl && (
-        <div className="mt-6 p-5 rounded-2xl bg-lavender border border-violet/10">
-          <p className="text-sm text-midnight/60 mb-3">
-            Full stillingsbeskrivelse ligger på arbeidsgivers side.
-          </p>
-          <a
-            href={listing.receiptUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-violet hover:text-violet/80 underline underline-offset-2"
-          >
-            Se full annonse og søk →
-          </a>
-        </div>
-      )}
 
       {/* Følg bedriften */}
       <div className="mt-10 border-t border-platinum pt-6">
