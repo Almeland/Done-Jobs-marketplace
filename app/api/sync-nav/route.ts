@@ -89,8 +89,9 @@ async function fetchFeedPage(url: string, token: string): Promise<FeedPage> {
 }
 
 async function fetchDetail(url: string, token: string): Promise<ListingDetail | null> {
+  const fullUrl = url.startsWith("http") ? url : `${FEED_BASE}${url}`;
   try {
-    const res = await fetch(url, {
+    const res = await fetch(fullUrl, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
