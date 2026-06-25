@@ -281,6 +281,12 @@ export async function GET(req: Request) {
 
         const publishedAt = detail?.published ? new Date(detail.published) : new Date();
 
+        const existing = await prisma.jobListing.findUnique({
+          where: { vilectId: navKey },
+          select: { id: true },
+        });
+        if (existing) continue;
+
         await prisma.jobListing.create({
           data: {
             accountId,
