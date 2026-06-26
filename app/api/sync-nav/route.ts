@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 export const maxDuration = 60;
 
 const FEED_BASE = "https://pam-stilling-feed.nav.no";
-const MAX_PAGES_PER_RUN = 30;
+const MAX_PAGES_PER_RUN = 150;
 const MAX_NEW_FETCHES = 40;
 const DETAIL_BATCH = 10;
 const MAX_AGE_DAYS = 90;
