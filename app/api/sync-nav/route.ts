@@ -4,8 +4,9 @@ export const maxDuration = 60;
 
 const FEED_BASE = "https://pam-stilling-feed.nav.no";
 const MAX_PAGES_PER_RUN = 30;
-const MAX_NEW_FETCHES = 100;
+const MAX_NEW_FETCHES = 40;
 const DETAIL_BATCH = 10;
+const MAX_AGE_DAYS = 90;
 const NAV_SYSTEM_EMAIL = "nav-sync@done-jobs.internal";
 const CURSOR_VILECT_ID = "nav:__cursor__";
 
@@ -238,8 +239,13 @@ export async function GET(req: Request) {
       });
     }
 
-    // --- Nye aktive stillinger ---
-    const newItems = activeItems.filter((i) => !listingMap.has(`nav:${i._feed_entry.uuid}`));
+    // --- Nye aktive stillinger — kun nylige (innen 90 dager) ---
+    const cutoff = Date.now() - MAX_AGE_DAYS * 86_400_000;
+    const newItems = activeItems.filter((i) => {
+      if (listingMap.has(`nav:${i._feed_entry.uuid}`)) return false;
+      const age = new Date(i._feed_entry.sistEndret).getTime();
+      return age >= cutoff;
+    });
     const toFetch = newItems.slice(0, MAX_NEW_FETCHES);
     let added = 0;
 
@@ -288,6 +294,9 @@ export async function GET(req: Request) {
         }
 
         const publishedAt = detail?.published ? new Date(detail.published) : new Date();
+
+        // Hopp over hvis vi ikke fikk gyldig innhold fra NAV
+        if (!detail) continue;
 
         const existing = await prisma.jobListing.findUnique({
           where: { vilectId: navKey },
