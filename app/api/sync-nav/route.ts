@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { fetchEnrichment } from "@/lib/brreg";
 
 export const maxDuration = 60;
 
@@ -262,6 +263,8 @@ export async function GET(req: Request) {
         const orgnr = detail?.employer?.orgnr?.replace(/\s/g, "") ?? null;
 
         let accountId: string;
+        let isNewAccount = false;
+
         if (orgnr && accountByOrgnr.has(orgnr)) {
           accountId = accountByOrgnr.get(orgnr)!;
         } else if (!orgnr && accountByName.has(companyName.toLowerCase())) {
@@ -271,8 +274,24 @@ export async function GET(req: Request) {
             data: { companyName, orgNumber: orgnr ?? null },
           });
           accountId = created.id;
+          isNewAccount = true;
           if (orgnr) accountByOrgnr.set(orgnr, accountId);
           else accountByName.set(companyName.toLowerCase(), accountId);
+        }
+
+        // Berik ny account med Brreg-data
+        if (isNewAccount && orgnr) {
+          const brreg = await fetchEnrichment(orgnr).catch(() => null);
+          if (brreg) {
+            await prisma.account.update({
+              where: { id: accountId },
+              data: {
+                website: brreg.website ?? undefined,
+                employeeCount: brreg.employeeCount ?? undefined,
+                foundedYear: brreg.foundedYear ?? undefined,
+              },
+            });
+          }
         }
 
         const occ = detail?.occupationCategories?.[0];

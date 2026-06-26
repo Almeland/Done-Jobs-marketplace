@@ -30,6 +30,22 @@ export async function fetchEnhet(orgNumber: string): Promise<BrregEnhet | null> 
   }
 }
 
+export type BrregEnrichment = {
+  website: string | null;
+  employeeCount: string | null;
+  foundedYear: number | null;
+};
+
+export async function fetchEnrichment(orgNumber: string): Promise<BrregEnrichment | null> {
+  const enhet = await fetchEnhet(orgNumber);
+  if (!enhet) return null;
+  return {
+    website: enhet.hjemmeside ?? null,
+    employeeCount: enhet.antallAnsatte != null ? String(enhet.antallAnsatte) : null,
+    foundedYear: enhet.stiftelsesdato ? parseInt(enhet.stiftelsesdato.slice(0, 4)) : null,
+  };
+}
+
 export async function fetchRegnskap(orgNumber: string): Promise<BrregRegnskap[]> {
   const clean = orgNumber.replace(/\s/g, "");
   try {
