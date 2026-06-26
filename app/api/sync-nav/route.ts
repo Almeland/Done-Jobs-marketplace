@@ -92,8 +92,7 @@ type FeedPage = {
   items: FeedItem[];
 };
 
-type ListingDetail = {
-  uuid: string;
+type AdContent = {
   title?: string;
   published?: string;
   expires?: string;
@@ -102,9 +101,16 @@ type ListingDetail = {
   applicationUrl?: string;
   sourceurl?: string;
   occupationCategories?: { level1?: string; level2?: string }[];
-  workLocations?: { municipal?: string; county?: string }[];
+  workLocations?: { city?: string; municipal?: string; county?: string }[];
   employer?: { name?: string; orgnr?: string };
   engagementtype?: string;
+  extent?: string;
+};
+
+type FeedEntry = {
+  uuid: string;
+  status: string;
+  ad_content?: AdContent;
 };
 
 function extractJwt(raw: string): string {
@@ -134,14 +140,15 @@ async function fetchFeedPage(url: string, token: string): Promise<FeedPage> {
   return res.json() as Promise<FeedPage>;
 }
 
-async function fetchDetail(url: string, token: string): Promise<ListingDetail | null> {
+async function fetchDetail(url: string, token: string): Promise<AdContent | null> {
   try {
     const res = await fetch(toAbsolute(url), {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
     if (!res.ok) return null;
-    return res.json() as Promise<ListingDetail>;
+    const entry = await res.json() as FeedEntry;
+    return entry.ad_content ?? null;
   } catch {
     return null;
   }
@@ -265,7 +272,9 @@ export async function GET(req: Request) {
 
         const occ = detail?.occupationCategories?.[0];
         const loc = detail?.workLocations?.[0];
-        const location = loc?.municipal
+        const location = loc?.city
+          ? capitalize(loc.city)
+          : loc?.municipal
           ? capitalize(loc.municipal)
           : capitalize(entry.municipal) ?? null;
 

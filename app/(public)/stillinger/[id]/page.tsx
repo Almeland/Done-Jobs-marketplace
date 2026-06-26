@@ -135,11 +135,24 @@ export default async function StillingDetaljPage({
       {/* Annonsetekst */}
       {listing.body ? (
         <div
-          className="prose prose-midnight max-w-none text-[16px] leading-relaxed text-midnight/80"
+          className="prose max-w-none prose-headings:text-midnight prose-headings:font-semibold prose-p:text-midnight/80 prose-li:text-midnight/80 prose-a:text-violet prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:max-w-full prose-strong:text-midnight text-[16px] leading-relaxed"
           dangerouslySetInnerHTML={{ __html: listing.body }}
         />
+      ) : listing.receiptUrl ? (
+        <div className="rounded-2xl bg-platinum/50 border border-platinum px-6 py-8 text-center">
+          <p className="text-midnight/60 text-[15px] mb-4">
+            Full stillingsbeskrivelse ligger hos arbeidsgiver.
+          </p>
+          <a
+            href={listing.receiptUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-midnight text-pearl rounded-full px-6 py-3 text-sm font-medium hover:bg-midnight/90 transition-colors"
+          >
+            Les full annonse →
+          </a>
+        </div>
       ) : null}
-
 
       {/* Følg bedriften */}
       <div className="mt-10 border-t border-platinum pt-6">
