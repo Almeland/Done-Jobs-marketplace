@@ -245,11 +245,10 @@ export async function GET(req: Request) {
 
     for (let i = 0; i < toFetch.length; i += DETAIL_BATCH) {
       const batch = toFetch.slice(i, i + DETAIL_BATCH);
-      const details = await Promise.all(batch.map((item) => fetchDetail(item.url, token)));
 
       for (let j = 0; j < batch.length; j++) {
         const item = batch[j];
-        const detail = details[j];
+        const detail = await fetchDetail(item.url, token);
         const entry = item._feed_entry;
         const navKey = `nav:${entry.uuid}`;
 
