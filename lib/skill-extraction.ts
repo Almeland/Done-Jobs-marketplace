@@ -56,15 +56,20 @@ Return ONLY a valid JSON array, no markdown:
   }
 }
 
-// Relevansfilter basert på ESCO-tittelens lengde og ordoverlepp
-// - Avvis ESCO-titler med >5 ord (f.eks. "react to crisis in a live performance env")
-// - Krev at minst halvparten av input-ordene finnes i tittelen
+// Relevansfilter:
+// - Enkeltords-input (f.eks. "React"): ESCO-tittelen må være ≤2 ord
+//   → avviser "react to crisis situations" men godtar "React" / "JavaScript"
+// - Flerfords-input (f.eks. "project management"): tittel må være ≤5 ord
+// - Krev ≥50 % ordoverlepp mellom input og tittel
 function isRelevantMatch(input: string, escoTitle: string | null): boolean {
   if (!escoTitle) return false;
   const titleWords = escoTitle.toLowerCase().split(/\W+/).filter(Boolean);
-  if (titleWords.length > 5) return false; // for lang = sannsynligvis feilmatch
   const inputWords = input.toLowerCase().split(/\W+/).filter((w) => w.length > 1);
   if (inputWords.length === 0) return false;
+
+  const maxTitleLen = inputWords.length === 1 ? 2 : 5;
+  if (titleWords.length > maxTitleLen) return false;
+
   const overlap = inputWords.filter((w) => titleWords.includes(w)).length;
   return overlap / inputWords.length >= 0.5;
 }
