@@ -17,7 +17,7 @@ export type MatchResult = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function preFilter(listings: any[], cvParsed: string, limit = 10): any[] {
+function preFilterByKeyword(listings: any[], cvParsed: string, limit = 10): any[] {
   const cv = cvParsed.toLowerCase();
   const words = cv.match(/\b\w{4,}\b/g) ?? [];
   const scored = listings.map((l) => {
@@ -32,6 +32,19 @@ function preFilter(listings: any[], cvParsed: string, limit = 10): any[] {
   return scored.slice(0, limit).map((s) => s.listing);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function preFilterByEsco(listings: any[], candidateUris: Set<string>, limit = 10): any[] {
+  const scored = listings.map((l) => {
+    const listingUris: string[] = (l.skillProfiles ?? []).map(
+      (p: { skillUri: string }) => p.skillUri
+    );
+    const overlap = listingUris.filter((uri) => candidateUris.has(uri)).length;
+    return { listing: l, overlap };
+  });
+  scored.sort((a, b) => b.overlap - a.overlap);
+  return scored.slice(0, limit).map((s) => s.listing);
+}
+
 export async function POST() {
   const jobSeeker = await getJobSeekerSession();
   if (!jobSeeker) return new Response("Uautorisert", { status: 401 });
@@ -41,9 +54,21 @@ export async function POST() {
     return new Response(JSON.stringify({ error: "Last opp CV først." }), { status: 400 });
   }
 
+  // Hent kandidatens ESCO-profil (finnes dersom CV er analysert etter kompetansebiblioteket ble aktivert)
+  const candidateSkills = await prisma.candidateSkillProfile.findMany({
+    where: { jobSeekerId: jobSeeker.id },
+    select: { skillUri: true },
+  });
+  const candidateUris = new Set(candidateSkills.map((s) => s.skillUri));
+  const useEscoFilter = candidateUris.size > 0;
+
   const allListings = await prisma.jobListing.findMany({
     where: { status: "ACTIVE" },
-    include: { account: { select: { companyName: true } } },
+    include: {
+      account: { select: { companyName: true } },
+      // Inkluder skill-profiler kun hvis ESCO-filter brukes
+      ...(useEscoFilter ? { skillProfiles: { select: { skillUri: true } } } : {}),
+    },
     orderBy: { publishedAt: "desc" },
   });
 
@@ -51,7 +76,9 @@ export async function POST() {
     return new Response(JSON.stringify([]), { headers: { "Content-Type": "application/json" } });
   }
 
-  const listings = preFilter(allListings, seeker.cvParsed, 10);
+  const listings = useEscoFilter
+    ? preFilterByEsco(allListings, candidateUris, 10)
+    : preFilterByKeyword(allListings, seeker.cvParsed, 10);
 
   const stillingerTekst = listings
     .map((l, i) =>

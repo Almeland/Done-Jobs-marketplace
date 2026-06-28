@@ -36,9 +36,10 @@ model JobSeeker {
   cvText   String?
   cvParsed String?
 
-  follows      CompanyFollow[]
-  alerts       JobAlert[]
-  applications Application[]
+  follows        CompanyFollow[]
+  alerts         JobAlert[]
+  applications   Application[]
+  skillProfiles  CandidateSkillProfile[]
 }
 
 model User {
@@ -62,6 +63,7 @@ model JobListing {
   account     Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
   createdById String
   createdBy   User    @relation("CreatedBy", fields: [createdById], references: [id])
+  skillProfiles JobSkillProfile[]
 
   title        String?
   body         String?
@@ -147,4 +149,42 @@ model Application {
   updatedAt   DateTime @updatedAt
 
   submittedAt DateTime @default(now())
+}
+
+// ESCO-referansedata (populeres on-demand ved synk og CV-parsing)
+model EscoSkill {
+  uri              String  @id
+  preferredLabelNb String?
+  preferredLabelEn String?
+  skillType        String?
+
+  jobProfiles       JobSkillProfile[]
+  candidateProfiles CandidateSkillProfile[]
+}
+
+// Kompetanseprofil per stilling (signal: 'extracted' fra tekst)
+model JobSkillProfile {
+  id           String     @id @default(cuid())
+  jobListingId String
+  jobListing   JobListing @relation(fields: [jobListingId], references: [id], onDelete: Cascade)
+  skillUri     String
+  skill        EscoSkill  @relation(fields: [skillUri], references: [uri])
+  weight       Float      @default(1.0)
+  signal       String     @default("extracted")
+  createdAt    DateTime   @default(now())
+
+  @@unique([jobListingId, skillUri])
+}
+
+// Kompetanseprofil per kandidat (fra CV-analyse)
+model CandidateSkillProfile {
+  id          String    @id @default(cuid())
+  jobSeekerId String
+  jobSeeker   JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  skillUri    String
+  skill       EscoSkill @relation(fields: [skillUri], references: [uri])
+  confidence  Float     @default(1.0)
+  createdAt   DateTime  @default(now())
+
+  @@unique([jobSeekerId, skillUri])
 }

@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getJobSeekerSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { extractAndSaveCandidateSkills } from "@/lib/skill-extraction";
 
 export const maxDuration = 60;
 
@@ -56,6 +57,14 @@ export async function POST(req: Request) {
     where: { id: jobSeeker.id },
     data: { cvText, cvParsed: JSON.stringify(parsed) },
   });
+
+  // Bygg ESCO-profil basert på kompetanser + roller fra CV
+  const cvContent = [
+    ...(parsed.kompetanser ?? []),
+    ...(parsed.roller ?? []),
+    parsed.sammendrag ?? "",
+  ].join(", ");
+  extractAndSaveCandidateSkills(jobSeeker.id, cvContent).catch(() => null);
 
   return new Response(JSON.stringify(parsed), {
     headers: { "Content-Type": "application/json" },

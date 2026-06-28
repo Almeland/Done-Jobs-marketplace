@@ -11,6 +11,10 @@
     {
       "path": "/api/nav-cleanup",
       "schedule": "0 3,8,10,12,14,16,18,20,22 * * *"
+    },
+    {
+      "path": "/api/skill-backfill",
+      "schedule": "30 */2 * * *"
     }
   ]
 }
