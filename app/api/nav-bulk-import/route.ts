@@ -189,6 +189,17 @@ export async function GET(req: Request) {
     const [token, systemUserId] = await Promise.all([getToken(), ensureSystemUser()]);
 
     const urlObj = new URL(req.url);
+
+    // ?reset=1 — sletter bulk-cursor slik at neste kjøring starter fra begynnelsen
+    if (urlObj.searchParams.get("reset") === "1") {
+      const existing = await prisma.jobListing.findUnique({ where: { vilectId: BULK_CURSOR_ID } });
+      if (existing) {
+        await prisma.jobListing.delete({ where: { vilectId: BULK_CURSOR_ID } });
+        return Response.json({ reset: true });
+      }
+      return Response.json({ reset: false, reason: "no_cursor_found" });
+    }
+
     // ?sample=1 — henter første aktive item fra cursor-posisjon og viser rårespons fra detail-API
     if (urlObj.searchParams.get("sample") === "1") {
       const savedCursor = await readBulkCursor();
