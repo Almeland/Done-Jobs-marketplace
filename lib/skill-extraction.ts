@@ -136,9 +136,13 @@ export async function extractAndSaveJobSkills(
   const { skills: rawSkills } = await callHaikuForSkills(title, body ?? "");
   if (rawSkills.length === 0) return 0;
 
+  // Parallelliser ESCO-oppslag for alle skills i én stilling
+  const escoResults = await Promise.all(
+    rawSkills.map(async (raw) => ({ raw, esco: await findEscoSkill(raw.navn) }))
+  );
+
   let saved = 0;
-  for (const raw of rawSkills) {
-    const esco = await findEscoSkill(raw.navn);
+  for (const { raw, esco } of escoResults) {
     if (!esco) continue;
 
     await prisma.escoSkill.upsert({

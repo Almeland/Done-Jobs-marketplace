@@ -3,7 +3,7 @@ import { extractAndSaveJobSkills, debugExtract } from "@/lib/skill-extraction";
 
 export const maxDuration = 60;
 
-const BATCH = 15;
+const BATCH = 5;
 
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
