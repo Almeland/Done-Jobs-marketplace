@@ -21,20 +21,19 @@ async function callHaikuForSkills(
   body: string
 ): Promise<{ skills: RawSkill[]; error?: string; raw?: string }> {
   const snippet = body ? body.replace(/<[^>]+>/g, " ").slice(0, 3000) : "";
-  const prompt = `Analyser denne stillingsbeskrivelsen og trekk ut de 6-8 viktigste, konkrete kompetansekravene.
+  const prompt = `Extract the 5-8 most important, concrete skill requirements from this job listing.
 
-Fokuser på:
-- Tekniske ferdigheter og verktøy (f.eks. JavaScript, Excel, SAP, AutoCAD)
-- Faglig kunnskap (f.eks. regnskapsføring, dataanalyse, prosjektstyring, sykepleiefaglig)
-- Metoder og rammeverk (f.eks. Scrum, PRINCE2, Lean)
+Rules:
+- Use SHORT, standard skill names (1-3 words). Good: "JavaScript", "project management", "SQL". Bad: "experience with frontend architecture and REST APIs".
+- Prefer internationally recognized terms that appear in European skill databases (ESCO).
+- Do NOT include generic personal traits like "team player", "structured", "self-driven".
+- Use English skill names unless the skill is uniquely Norwegian (e.g. "reindrift").
 
-IKKE inkluder generiske personlige egenskaper som "selvgående", "strukturert" eller "teamplayer".
+Job title: ${title}
+${snippet ? `\nDescription:\n${snippet}` : ""}
 
-Stilling: ${title}
-${snippet ? `\nBeskrivelse:\n${snippet}` : ""}
-
-Returner KUN gyldig JSON-array, ingen markdown:
-[{"navn":"JavaScript","viktig":true},{"navn":"React","viktig":false}]`;
+Return ONLY a valid JSON array, no markdown:
+[{"navn":"JavaScript","viktig":true},{"navn":"project management","viktig":false}]`;
 
   try {
     const msg = await client.messages.create({
@@ -56,12 +55,20 @@ Returner KUN gyldig JSON-array, ingen markdown:
   }
 }
 
+// Sjekk at ESCO-treffet er relevant — avvis hvis ingen ord overlapper mellom input og label
+function isRelevantMatch(input: string, escoLabel: string | null): boolean {
+  if (!escoLabel) return false;
+  const inputWords = input.toLowerCase().split(/\W+/).filter((w) => w.length > 2);
+  const labelWords = escoLabel.toLowerCase().split(/\W+/).filter((w) => w.length > 2);
+  return inputWords.some((w) => labelWords.includes(w));
+}
+
 async function findEscoSkill(
   skillName: string
 ): Promise<{ uri: string; labelNb: string | null; labelEn: string | null; skillType: string | null } | null> {
   try {
-    // ESCO bruker "no" som nøkkel for norsk (ikke "nb")
-    const url = `${ESCO_API}/search?text=${encodeURIComponent(skillName)}&language=no&type=skill&full=false&offset=0&limit=3`;
+    // Søk i engelsk — ESCO har bedre dekning på engelsk
+    const url = `${ESCO_API}/search?text=${encodeURIComponent(skillName)}&language=en&type=skill&full=false&offset=0&limit=5`;
     const res = await fetch(url, {
       signal: AbortSignal.timeout(4000),
       headers: { Accept: "application/json" },
@@ -72,13 +79,18 @@ async function findEscoSkill(
     const results = data._embedded?.results ?? [];
     if (results.length === 0) return null;
 
-    const hit = results[0];
-    return {
-      uri: hit.uri,
-      labelNb: hit.preferredLabel?.["no"] ?? hit.preferredLabel?.["nb"] ?? null,
-      labelEn: hit.preferredLabel?.["en"] ?? null,
-      skillType: hit.className ?? null,
-    };
+    // Finn første treff med relevant label (avvis semantiske feilmatcher)
+    for (const hit of results) {
+      const labelEn = hit.preferredLabel?.["en"] ?? null;
+      if (!isRelevantMatch(skillName, labelEn)) continue;
+      return {
+        uri: hit.uri,
+        labelNb: hit.preferredLabel?.["no"] ?? hit.preferredLabel?.["nb"] ?? null,
+        labelEn,
+        skillType: hit.className ?? null,
+      };
+    }
+    return null;
   } catch {
     return null;
   }
