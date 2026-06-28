@@ -10,6 +10,7 @@ type EscoSearchResult = {
   _embedded?: {
     results?: Array<{
       uri: string;
+      title?: string;
       className?: string;
       preferredLabel?: Record<string, string>;
     }>;
@@ -55,12 +56,17 @@ Return ONLY a valid JSON array, no markdown:
   }
 }
 
-// Sjekk at ESCO-treffet er relevant — avvis hvis ingen ord overlapper mellom input og label
-function isRelevantMatch(input: string, escoLabel: string | null): boolean {
-  if (!escoLabel) return false;
-  const inputWords = input.toLowerCase().split(/\W+/).filter((w) => w.length > 2);
-  const labelWords = escoLabel.toLowerCase().split(/\W+/).filter((w) => w.length > 2);
-  return inputWords.some((w) => labelWords.includes(w));
+// Relevansfilter basert på ESCO-tittelens lengde og ordoverlepp
+// - Avvis ESCO-titler med >5 ord (f.eks. "react to crisis in a live performance env")
+// - Krev at minst halvparten av input-ordene finnes i tittelen
+function isRelevantMatch(input: string, escoTitle: string | null): boolean {
+  if (!escoTitle) return false;
+  const titleWords = escoTitle.toLowerCase().split(/\W+/).filter(Boolean);
+  if (titleWords.length > 5) return false; // for lang = sannsynligvis feilmatch
+  const inputWords = input.toLowerCase().split(/\W+/).filter((w) => w.length > 1);
+  if (inputWords.length === 0) return false;
+  const overlap = inputWords.filter((w) => titleWords.includes(w)).length;
+  return overlap / inputWords.length >= 0.5;
 }
 
 async function findEscoSkill(
@@ -79,14 +85,14 @@ async function findEscoSkill(
     const results = data._embedded?.results ?? [];
     if (results.length === 0) return null;
 
-    // Finn første treff med relevant label (avvis semantiske feilmatcher)
+    // Finn første treff med relevant tittel (avvis semantiske feilmatcher)
     for (const hit of results) {
-      const labelEn = hit.preferredLabel?.["en"] ?? null;
-      if (!isRelevantMatch(skillName, labelEn)) continue;
+      const escoTitle = hit.title ?? hit.preferredLabel?.["en"] ?? null;
+      if (!isRelevantMatch(skillName, escoTitle)) continue;
       return {
         uri: hit.uri,
         labelNb: hit.preferredLabel?.["no"] ?? hit.preferredLabel?.["nb"] ?? null,
-        labelEn,
+        labelEn: escoTitle,
         skillType: hit.className ?? null,
       };
     }
