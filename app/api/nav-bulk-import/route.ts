@@ -95,17 +95,40 @@ async function fetchFeedPage(url: string, token: string): Promise<FeedPage> {
 }
 
 async function fetchDetail(url: string, token: string): Promise<AdContent | null> {
+  if (!url) return null;
   try {
     const res = await fetch(toAbsolute(url), {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return null;
-    const entry = (await res.json()) as FeedEntry;
-    return entry.ad_content ?? null;
+    const body = await res.json() as Record<string, unknown>;
+    // NAV uses two layouts: { ad_content: {...} } for newer, direct object for older
+    if (body.ad_content && typeof body.ad_content === "object") {
+      return body.ad_content as AdContent;
+    }
+    if (body.title || body.description) {
+      return body as unknown as AdContent;
+    }
+    return null;
   } catch {
     return null;
+  }
+}
+
+async function sampleDetail(url: string, token: string): Promise<unknown> {
+  if (!url) return { error: "empty_url" };
+  try {
+    const res = await fetch(toAbsolute(url), {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return { http_status: res.status, url };
+    return await res.json();
+  } catch (e) {
+    return { error: String(e), url };
   }
 }
 
@@ -164,6 +187,20 @@ export async function GET(req: Request) {
     }
 
     const [token, systemUserId] = await Promise.all([getToken(), ensureSystemUser()]);
+
+    const urlObj = new URL(req.url);
+    // ?sample=1 — henter første aktive item fra cursor-posisjon og viser rårespons fra detail-API
+    if (urlObj.searchParams.get("sample") === "1") {
+      const savedCursor = await readBulkCursor();
+      const startUrl = savedCursor ?? `${FEED_BASE}/api/v1/feed`;
+      const page = await fetchFeedPage(startUrl, token);
+      const activeItem = page.items.find((i) => i._feed_entry?.status === "ACTIVE");
+      if (!activeItem) {
+        return Response.json({ error: "no_active_item_on_page", sample_url: startUrl, items_count: page.items.length });
+      }
+      const raw = await sampleDetail(activeItem.url, token);
+      return Response.json({ feed_item: activeItem, detail_response: raw });
+    }
 
     const savedCursor = await readBulkCursor();
     let nextUrl: string | null = savedCursor ?? `${FEED_BASE}/api/v1/feed`;
