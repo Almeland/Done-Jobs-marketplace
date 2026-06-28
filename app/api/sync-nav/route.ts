@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { fetchEnrichment } from "@/lib/brreg";
-import { extractAndSaveJobSkills } from "@/lib/skill-extraction";
 
 export const maxDuration = 60;
 
@@ -347,13 +346,6 @@ export async function GET(req: Request) {
 
         listingMap.set(navKey, "created");
         added++;
-
-        // Skill-ekstraksjon asynkront — feiler ikke listing-opprettelsen
-        extractAndSaveJobSkills(
-          newListing.id,
-          detail?.title ?? entry.title ?? "",
-          detail?.description ?? null
-        ).catch(() => null);
       }
     }
 

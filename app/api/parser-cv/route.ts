@@ -58,13 +58,13 @@ export async function POST(req: Request) {
     data: { cvText, cvParsed: JSON.stringify(parsed) },
   });
 
-  // Bygg ESCO-profil basert på kompetanser + roller fra CV
+  // Bygg ESCO-profil — awaited fordi Vercel terminerer funksjonen etter response
   const cvContent = [
     ...(parsed.kompetanser ?? []),
     ...(parsed.roller ?? []),
     parsed.sammendrag ?? "",
   ].join(", ");
-  extractAndSaveCandidateSkills(jobSeeker.id, cvContent).catch(() => null);
+  await extractAndSaveCandidateSkills(jobSeeker.id, cvContent).catch(() => null);
 
   return new Response(JSON.stringify(parsed), {
     headers: { "Content-Type": "application/json" },
